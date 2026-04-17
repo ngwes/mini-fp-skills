@@ -3,14 +3,14 @@
   "version": "1.0.0",
   "description": "Skills for @ngwes/mini-fp — TypeScript functional programming library",
   "skills": [
-    { "name": "ngwes/mini-fp",                     "file": "skills/ngwes-mini-fp.md" },
-    { "name": "ngwes/mini-fp:option",              "file": "skills/ngwes-mini-fp:option.md" },
-    { "name": "ngwes/mini-fp:either",              "file": "skills/ngwes-mini-fp:either.md" },
-    { "name": "ngwes/mini-fp:try",                 "file": "skills/ngwes-mini-fp:try.md" },
-    { "name": "ngwes/mini-fp:validate",            "file": "skills/ngwes-mini-fp:validate.md" },
-    { "name": "ngwes/mini-fp:utils",               "file": "skills/ngwes-mini-fp:utils.md" },
-    { "name": "ngwes/mini-fp:error-handling",      "file": "skills/ngwes-mini-fp:error-handling.md" },
-    { "name": "ngwes/mini-fp:validation-patterns", "file": "skills/ngwes-mini-fp:validation-patterns.md" },
-    { "name": "ngwes/mini-fp:async-pipelines",     "file": "skills/ngwes-mini-fp:async-pipelines.md" }
+    { "name": "ngwes/mini-fp",                     "file": "skills/mini-fp.md" },
+    { "name": "ngwes/mini-fp:option",              "file": "skills/mini-fp/option.md" },
+    { "name": "ngwes/mini-fp:either",              "file": "skills/mini-fp/either.md" },
+    { "name": "ngwes/mini-fp:try",                 "file": "skills/mini-fp/try.md" },
+    { "name": "ngwes/mini-fp:validate",            "file": "skills/mini-fp/validate.md" },
+    { "name": "ngwes/mini-fp:utils",               "file": "skills/mini-fp/utils.md" },
+    { "name": "ngwes/mini-fp:error-handling",      "file": "skills/mini-fp/error-handling.md" },
+    { "name": "ngwes/mini-fp:validation-patterns", "file": "skills/mini-fp/validation-patterns.md" },
+    { "name": "ngwes/mini-fp:async-pipelines",     "file": "skills/mini-fp/async-pipelines.md" }
   ]
 }
