@@ -1,6 +1,6 @@
 # mini-fp Agent Docs
 
-Superpowers-style skill files for [`@ngwes/mini-fp`](https://www.npmjs.com/package/@ngwes/mini-fp) — a minimal TypeScript functional programming library.
+Claude Code skill plugin for [`@ngwes/mini-fp`](https://www.npmjs.com/package/@ngwes/mini-fp) — a minimal TypeScript functional programming library.
 
 These skills are loaded by coding agents (Claude Code, Copilot, Cursor) when working on projects that use `@ngwes/mini-fp`.
 
@@ -8,7 +8,7 @@ These skills are loaded by coding agents (Claude Code, Copilot, Cursor) when wor
 
 ## Installation
 
-### Option A: Superpowers plugin
+### Option A: Plugin
 
 ```bash
 claude plugins install ngwes/mini-fp-agent-docs
