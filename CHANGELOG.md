@@ -1,3 +1,10 @@
+# [1.1.0](https://gitlab.com/ngwes/skills/mini-fp-skills/compare/v1.0.0...v1.1.0) (2026-04-18)
+
+
+### Features
+
+* add skill benchmarking framework and evaluation scripts ([cfcebc4](https://gitlab.com/ngwes/skills/mini-fp-skills/commit/cfcebc48f72ab665c1a081d5397bb54919ad17da))
+
 # 1.0.0 (2026-04-17)
 
 
