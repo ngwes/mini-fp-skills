@@ -17,7 +17,7 @@ claude plugins install ngwes/mini-fp-agent-docs
 ### Option B: Manual copy
 
 ```bash
-cp skills/*.md ~/.claude/skills/
+cp -r skills/. ~/.claude/skills/
 ```
 
 ---
@@ -27,7 +27,7 @@ cp skills/*.md ~/.claude/skills/
 Add this to the `CLAUDE.md` in your project (the one that uses `@ngwes/mini-fp`):
 
 ```markdown
-When working with @ngwes/mini-fp, invoke the `ngwes/mini-fp` skill first.
+When working with @ngwes/mini-fp, invoke the `ngwes/mini-fp:mini-fp` skill first.
 ```
 
 The agent will load the router skill, identify the right type or pattern, and invoke the specific skill automatically.
@@ -38,7 +38,7 @@ The agent will load the router skill, identify the right type or pattern, and in
 
 | Skill | Description |
 |---|---|
-| `ngwes/mini-fp` | Router — entry point, decision table, skill index |
+| `ngwes/mini-fp:mini-fp` | Router — entry point, decision table, skill index |
 | `ngwes/mini-fp:option` | `Option<T>` and `OptionAsync<T>` reference |
 | `ngwes/mini-fp:either` | `Either<L,R>` and `EitherAsync<L,R>` reference |
 | `ngwes/mini-fp:try` | `Try<T>` and `TryAsync<T>` reference |
