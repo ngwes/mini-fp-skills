@@ -1,0 +1,35 @@
+{
+  "skill": "try",
+  "scenarios": [
+    {
+      "id": "wrap-throwing-sync",
+      "critical": true,
+      "prompt": "Write TypeScript: parse a JSON string that may be malformed. Handle the case where JSON.parse throws. Return a default empty object if parsing fails. Do not use try/catch.",
+      "criteria": [
+        "Uses Try.run() to wrap the throwing call",
+        "Does not use a bare try/catch block",
+        "Uses .onFail() to provide the default value on failure"
+      ]
+    },
+    {
+      "id": "async-exception-boundary",
+      "critical": true,
+      "prompt": "Write TypeScript: fetch JSON from an external API URL. The fetch may throw (network error) or the .json() parse may throw. Log the error and return a cached fallback value if anything throws. Do not use try/catch.",
+      "criteria": [
+        "Uses TryAsync.runAsync() or Try.runAsync() to wrap the async operation",
+        "Does not use a bare try/catch around the async code",
+        "Uses .onFailAsync() for the error logging and fallback"
+      ]
+    },
+    {
+      "id": "noisy-db-exception",
+      "critical": false,
+      "prompt": "Prisma + Express app. A database query may throw a connection error or a Prisma-specific error. Write a function that runs the query, logs any thrown error to a logger, and returns null on failure. Also show how to check if the result succeeded.",
+      "criteria": [
+        "Uses Try or TryAsync to capture the thrown error",
+        "No bare try/catch block present",
+        "Uses .isSuccess() / .isFailure() or .onFail() to inspect and handle the error"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "skill": "validation-patterns",
+  "scenarios": [
+    {
+      "id": "form-all-errors",
+      "critical": true,
+      "prompt": "Write TypeScript validators for a user registration form: username (3-20 chars), email (contains @ and domain), password (min 8 chars, at least one uppercase, one digit). Show ALL errors at once — do not stop at the first failure.",
+      "criteria": [
+        "Uses Validate (not Either) so all field errors are collected",
+        "Uses .combine() across all field validators to accumulate errors",
+        "A test case with all three fields invalid produces three errors, not one"
+      ]
+    },
+    {
+      "id": "typed-field-errors",
+      "critical": true,
+      "prompt": "Write a DTO validator for UpdateProfileDto: bio (max 500 chars), website (must start with https://). Each error must be a FieldError object with field and message properties. Accumulate errors from both fields.",
+      "criteria": [
+        "Uses Validate<FieldError, UpdateProfileDto> with typed error objects",
+        "FieldError has both a field name and a message string",
+        "Uses .combine() so both field errors are returned if both fail"
+      ]
+    },
+    {
+      "id": "batch-product-validation",
+      "critical": false,
+      "prompt": "Write TypeScript: validate an array of Product objects where each must have a positive price and non-empty name. Use sequenceValidate. Return the indices and reasons for all invalid products.",
+      "criteria": [
+        "Uses sequenceValidate to process all products",
+        "All invalid products are reported, not just the first",
+        "Each error includes which product failed (index or identifier)"
+      ]
+    }
+  ]
+}

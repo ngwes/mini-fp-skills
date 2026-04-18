@@ -1,0 +1,35 @@
+{
+  "skill": "error-handling",
+  "scenarios": [
+    {
+      "id": "typed-pipeline-http",
+      "critical": true,
+      "prompt": "Write a TypeScript HTTP handler: parse a user ID from request params, fetch the user from DB (async), check the user has admin role. Each step returns a typed AppError with a code field. Map error codes to HTTP status codes at the end. Do not use exceptions.",
+      "criteria": [
+        "Uses Either with a typed error type that has a code or discriminant field",
+        "Uses .bind() / .bindAsync() pipeline instead of try/catch or nested ifs",
+        "Uses .match() to map error codes to HTTP status codes at the end"
+      ]
+    },
+    {
+      "id": "wrap-third-party-throws",
+      "critical": true,
+      "prompt": "A third-party crypto library exposes hash(data: string): string but throws on invalid input. Write a TypeScript wrapper that returns Either<Error, string> instead of throwing. Also show how to use it in a pipeline.",
+      "criteria": [
+        "Uses Try.run() to capture the throw from the third-party function",
+        "Converts the Try result to Either (right on success, left on failure)",
+        "No bare try/catch block in the wrapper"
+      ]
+    },
+    {
+      "id": "error-fallback-recovery",
+      "critical": false,
+      "prompt": "Write TypeScript: look up a value from Redis cache (returns Either<'miss', CachedValue>). If cache miss (Left), fall back to a DB query (async, also returns Either<'db_error', DbValue>). If DB also misses, return Left. Show the full fallback chain.",
+      "criteria": [
+        "Uses Either.left() to represent cache miss and DB miss",
+        "Uses .bindLeftAsync() or .bindLeft() to implement the fallback on Left",
+        "Chain stops when the first Right is found (does not always go to DB)"
+      ]
+    }
+  ]
+}

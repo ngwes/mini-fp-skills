@@ -1,0 +1,35 @@
+{
+  "skill": "async-pipelines",
+  "scenarios": [
+    {
+      "id": "option-async-chain",
+      "critical": true,
+      "prompt": "Write TypeScript: validate a bearer token (async, may return null user ID), then load user preferences from DB (async, may not exist), then load their recommended items (async, may not exist). Short-circuit at the first absent value. No nested callbacks or intermediate awaits between chain steps.",
+      "criteria": [
+        "Uses .bindAsync() to chain async optional steps on Option",
+        "Does not use intermediate await between chain steps (stays in the chain)",
+        "Returns OptionAsync or Promise<Option<T>>, not nested nulls"
+      ]
+    },
+    {
+      "id": "either-async-chain",
+      "critical": true,
+      "prompt": "Write TypeScript: authenticate an API token (async, returns Either<ApiError, UserId>), fetch the user (async, returns Either<ApiError, User>), check admin role (sync). Return typed errors at each step. Show consumption with match at the end.",
+      "criteria": [
+        "Uses .bindAsync() to chain async Either steps",
+        "Mixes sync .bind() and async .bindAsync() in the same chain",
+        "Uses .match() at consumption point to handle both success and error cases"
+      ]
+    },
+    {
+      "id": "mixed-sync-async-noisy",
+      "critical": false,
+      "prompt": "Express + Prisma + Redis pipeline: parse raw body (sync), validate schema (sync), check rate limit from Redis (async), save to Prisma (async), publish event to queue (async). Each step can fail. Stop on first failure and return structured error.",
+      "criteria": [
+        "Uses sync .bind() for sync steps and .bindAsync() for async steps in the same chain",
+        "Does not await between chain steps — stays fluent",
+        "Error type propagates consistently through the entire chain"
+      ]
+    }
+  ]
+}

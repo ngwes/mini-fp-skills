@@ -1,0 +1,35 @@
+{
+  "skill": "either",
+  "scenarios": [
+    {
+      "id": "typed-error-chain",
+      "critical": true,
+      "prompt": "Write TypeScript: parse a user ID from a raw string (may not be a valid number), then fetch the user from DB (may not exist). Return a typed error at each step. Stop on the first failure.",
+      "criteria": [
+        "Uses Either.left() for errors and Either.right() for success",
+        "Error type is a typed object or union, not a plain string or any",
+        "Uses .bind() or .bindAsync() to chain steps without manual if checks"
+      ]
+    },
+    {
+      "id": "map-transform-both-sides",
+      "critical": true,
+      "prompt": "Write TypeScript: fetch an order from DB using Either. If found, transform the shipping address to uppercase. If not found, transform the NOT_FOUND error into a user-facing message string. Show both transformations.",
+      "criteria": [
+        "Uses .map() to transform the right (success) value",
+        "Uses .mapLeft() to transform the left (error) value",
+        "Both branches are handled without pattern matching only at the end"
+      ]
+    },
+    {
+      "id": "multi-step-pipeline-noisy",
+      "critical": false,
+      "prompt": "Express route handler: parse request body JSON, validate required fields, check user permissions in DB (async), save record to DB (async). Each step can fail with a different error. Return the appropriate HTTP status code per error type at the end.",
+      "criteria": [
+        "Uses Either pipeline with .bind() for sync steps and .bindAsync() for async steps",
+        "Short-circuits: downstream steps do not run after the first Left",
+        "Uses .match() at the end to map error codes to HTTP status codes"
+      ]
+    }
+  ]
+}
