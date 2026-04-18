@@ -1,5 +1,5 @@
 ---
-name: ngwes/mini-fp:mini-fp
+name: mini-fp
 description: Entry point for @ngwes/mini-fp. Invoke this first when working with the library to select the right type or pattern skill.
 ---
 

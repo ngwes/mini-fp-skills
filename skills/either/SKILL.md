@@ -1,5 +1,5 @@
 ---
-name: ngwes/mini-fp:either
+name: either
 description: API reference for Either<L, R> and EitherAsync<L, R> from @ngwes/mini-fp.
 ---
 

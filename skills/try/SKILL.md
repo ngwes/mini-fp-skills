@@ -1,5 +1,5 @@
 ---
-name: ngwes/mini-fp:try
+name: try
 description: API reference for Try<T> and TryAsync<T> from @ngwes/mini-fp.
 ---
 

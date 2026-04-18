@@ -1,5 +1,5 @@
 ---
-name: ngwes/mini-fp:option
+name: option
 description: API reference for Option<T> and OptionAsync<T> from @ngwes/mini-fp.
 ---
 

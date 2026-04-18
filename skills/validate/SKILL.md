@@ -1,5 +1,5 @@
 ---
-name: ngwes/mini-fp:validate
+name: validate
 description: API reference for Validate<L, R>, sequenceValidate, and sequenceValidateAsync from @ngwes/mini-fp.
 ---
 
