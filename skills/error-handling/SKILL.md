@@ -1,5 +1,5 @@
 ---
-name: ngwes/mini-fp:error-handling
+name: error-handling
 description: Pattern guide for typed error handling with Either and Try from @ngwes/mini-fp.
 ---
 

@@ -1,5 +1,5 @@
 ---
-name: ngwes/mini-fp:async-pipelines
+name: async-pipelines
 description: Pattern guide for chaining async operations with Option, Either, and Try from @ngwes/mini-fp.
 ---
 

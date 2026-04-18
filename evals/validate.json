@@ -1,0 +1,35 @@
+{
+  "skill": "validate",
+  "scenarios": [
+    {
+      "id": "accumulate-field-errors",
+      "critical": true,
+      "prompt": "Write TypeScript validators for a signup form: name (required, non-empty), email (must contain @), age (must be >= 18). Run ALL validators and return ALL errors at once, not just the first one.",
+      "criteria": [
+        "Uses Validate (not Either) so errors accumulate instead of short-circuiting",
+        "Uses .combine() to merge results from multiple validators",
+        "Returns all errors, not just the first one that fails"
+      ]
+    },
+    {
+      "id": "dto-typed-errors",
+      "critical": true,
+      "prompt": "Write a DTO validator for CreateProductDto: name (non-empty string), price (positive number), stock (non-negative integer). Each validator should return a typed FieldError object with a field name and message. Accumulate ALL errors.",
+      "criteria": [
+        "Uses Validate.valid() and Validate.invalid() with typed error objects",
+        "Error type includes a field name (not just a plain string)",
+        "Uses .combine() or sequenceValidate to collect all errors from all fields"
+      ]
+    },
+    {
+      "id": "batch-array-validation",
+      "critical": false,
+      "prompt": "Write TypeScript: validate an array of numbers where each must be positive and less than 1000. Return ALL numbers that fail with their index and reason. Use sequenceValidate.",
+      "criteria": [
+        "Uses sequenceValidate to validate all items",
+        "Does not short-circuit: all items are validated even after the first failure",
+        "Returns errors from all failing items, not just the first"
+      ]
+    }
+  ]
+}

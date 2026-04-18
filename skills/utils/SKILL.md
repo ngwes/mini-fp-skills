@@ -1,5 +1,5 @@
 ---
-name: ngwes/mini-fp:utils
+name: utils
 description: API reference for Unit, traversal functions, and asTask from @ngwes/mini-fp.
 ---
 

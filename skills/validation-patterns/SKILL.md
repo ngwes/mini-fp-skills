@@ -1,5 +1,5 @@
 ---
-name: ngwes/mini-fp:validation-patterns
+name: validation-patterns
 description: Pattern guide for collecting all validation errors with Validate from @ngwes/mini-fp.
 ---
 
