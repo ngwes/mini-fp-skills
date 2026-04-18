@@ -26,13 +26,13 @@ npm i @ngwes/mini-fp
 
 | Skill | When to invoke |
 |---|---|
-| `ngwes/mini-fp:option` | Working with optional / nullable values |
-| `ngwes/mini-fp:either` | Propagating typed errors through a pipeline |
-| `ngwes/mini-fp:try` | Wrapping code that throws exceptions |
-| `ngwes/mini-fp:validate` | Accumulating multiple validation errors |
-| `ngwes/mini-fp:utils` | Using `Unit`, traversal functions, or `asTask` |
-| `ngwes/mini-fp:error-handling` | Building typed error pipelines (pattern) |
-| `ngwes/mini-fp:validation-patterns` | Validating forms, DTOs, or batches (pattern) |
-| `ngwes/mini-fp:async-pipelines` | Chaining async operations safely (pattern) |
+| `option` | Working with optional / nullable values |
+| `either` | Propagating typed errors through a pipeline |
+| `try` | Wrapping code that throws exceptions |
+| `validate` | Accumulating multiple validation errors |
+| `utils` | Using `Unit`, traversal functions, or `asTask` |
+| `error-handling` | Building typed error pipelines (pattern) |
+| `validation-patterns` | Validating forms, DTOs, or batches (pattern) |
+| `async-pipelines` | Chaining async operations safely (pattern) |
 
 **Rule:** After reading this skill, invoke the specific skill for the type or pattern you need.
