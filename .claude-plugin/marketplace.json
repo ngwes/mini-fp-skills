@@ -1,0 +1,14 @@
+{
+  "name": "mini-fp-skills",
+  "owner": {
+    "name": "ngwes"
+  },
+  "description": "Claude Code skills for the @ngwes/mini-fp TypeScript functional programming library",
+  "plugins": [
+    {
+      "name": "mini-fp",
+      "source": "./",
+      "description": "Skills for @ngwes/mini-fp — TypeScript functional programming library"
+    }
+  ]
+}
