@@ -1,3 +1,15 @@
+# [1.2.0](https://github.com/ngwes/mini-fp-skills/compare/v1.1.0...v1.2.0) (2026-10-24)
+
+
+### Bug Fixes
+
+* use a kebab-case plugin name ([cdc89e1](https://github.com/ngwes/mini-fp-skills/commit/cdc89e1a10837be690a6b82fdab4dc7fd4f8cd0f))
+
+
+### Features
+
+* add a plugin marketplace manifest ([da32cc3](https://github.com/ngwes/mini-fp-skills/commit/da32cc370f0a10296ec0959f1f2e9cc0ec28f20b))
+
 # [1.1.0](https://gitlab.com/ngwes/skills/mini-fp-skills/compare/v1.0.0...v1.1.0) (2026-04-18)
 
 
