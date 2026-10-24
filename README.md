@@ -10,9 +10,34 @@ These skills are loaded by coding agents (Claude Code, Copilot, Cursor) when wor
 
 ### Option A: Plugin
 
-```bash
-claude plugins install ngwes/mini-fp-skills
+This repository is both a plugin and a single-plugin marketplace. In a Claude Code session:
+
+```text
+/plugin marketplace add ngwes/mini-fp-skills
+/plugin install mini-fp@mini-fp-skills
 ```
+
+Or from your shell:
+
+```bash
+claude plugin marketplace add ngwes/mini-fp-skills
+claude plugin install mini-fp@mini-fp-skills
+```
+
+Newer Claude Code versions can do both steps at once (2.1.275 or later in a session, 2.1.292 or later in the shell):
+
+```bash
+claude plugin install mini-fp --marketplace ngwes/mini-fp-skills
+```
+
+New versions reach you when you refresh the marketplace and update the plugin:
+
+```bash
+claude plugin marketplace update mini-fp-skills
+claude plugin update mini-fp@mini-fp-skills
+```
+
+If the repository is private, Claude Code clones it with the git credentials already on your machine (for example after `gh auth setup-git`). Set `CLAUDE_CODE_PLUGIN_PREFER_HTTPS=1` if you have no SSH key for GitHub.
 
 ### Option B: Manual copy
 
@@ -31,6 +56,8 @@ When working with @ngwes/mini-fp, invoke the `mini-fp` skill first.
 ```
 
 The agent will load the router skill, identify the right type or pattern, and invoke the specific skill automatically.
+
+Installed as a plugin, every skill is namespaced by the plugin name (for example `mini-fp:mini-fp` and `mini-fp:either`). With the manual copy they keep their plain names (`mini-fp`, `either`).
 
 ---
 
