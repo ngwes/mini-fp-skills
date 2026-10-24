@@ -2,6 +2,14 @@
   "name": "@ngwes/mini-fp-skills",
   "version": "1.0.0",
   "description": "Claude Code skill plugin for @ngwes/mini-fp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ngwes/mini-fp-skills.git"
+  },
+  "homepage": "https://github.com/ngwes/mini-fp-skills#readme",
+  "bugs": {
+    "url": "https://github.com/ngwes/mini-fp-skills/issues"
+  },
   "private": true,
   "type": "module",
   "scripts": {
