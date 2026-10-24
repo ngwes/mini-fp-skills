@@ -1,5 +1,10 @@
 {
-  "name": "ngwes/mini-fp",
+  "name": "mini-fp",
   "version": "1.1.0",
-  "description": "Skills for @ngwes/mini-fp — TypeScript functional programming library"
+  "description": "Skills for @ngwes/mini-fp — TypeScript functional programming library",
+  "author": {
+    "name": "ngwes"
+  },
+  "homepage": "https://github.com/ngwes/mini-fp-skills",
+  "repository": "https://github.com/ngwes/mini-fp-skills"
 }
