@@ -12,8 +12,9 @@ Propagate structured errors through a multi-step pipeline without using exceptio
 | Scenario | Use |
 |---|---|
 | Typed error, stop on first failure | `Either<ErrorType, T>` |
-| Third-party code that throws | `Try<T>` to capture, then convert to `Either` |
-| Async pipeline | `bindAsync` → `EitherAsync` |
+| Third-party code that throws | `Try.run(...).toEither().mapLeft(...)` |
+| Async pipeline | `mapAsync`/`bindAsync` → `EitherAsync` (same methods as `Either`) |
+| Value may be null/undefined | `Option.from(v).toEither(error)` or `toEither(v, error)` |
 
 ---
 
@@ -44,14 +45,13 @@ const requireAdmin = (user: User): Either<AppError, User> =>
     : Either.left({ code: 'FORBIDDEN', message: 'Admin access required' });
 
 // Pipeline — each step only runs if the previous succeeded
-const handle = async (rawId: string): Promise<Either<AppError, User>> =>
+const handle = (rawId: string) =>          // EitherAsync<AppError, User>
   parseId(rawId)
-    .bindAsync(id   => fetchUser(id))
-    .bindAsync(user => Promise.resolve(requireAdmin(user)));
+    .bindAsync(id => fetchUser(id))
+    .bind(requireAdmin);                   // sync step directly on EitherAsync
 
-// Consume
-const result = await handle('42');
-result.match(
+// Consume — match on EitherAsync returns a Promise
+await handle('42').match(
   user  => res.status(200).json(user),
   error => {
     const status =
@@ -67,13 +67,15 @@ result.match(
 ## Recipe: Wrap throwing code → Either
 
 ```typescript
-import { Try, Either } from '@ngwes/mini-fp';
+import { Try, Either, Unit } from '@ngwes/mini-fp';
 
-const safeParseJson = <T>(raw: string): Either<Error, T> => {
-  const t = Try.run(() => JSON.parse(raw) as T);
-  if (t.isSuccess()) return Either.right(t.onFail(() => null as never));
-  return Either.left(t.onFail(e => e as Error) as unknown as Error);
-};
+const safeParseJson = <T>(raw: string): Either<AppError, T> =>
+  Try.run(() => JSON.parse(raw) as T)
+    .toEither()                                        // Either<unknown, T>
+    .mapLeft(e => ({ code: 'BAD_JSON', message: (e as Error).message }));
+
+// Try<void> → map to Unit first: toEither() throws on a null/undefined value
+Try.run(() => fs.writeFileSync(path, data)).map(() => Unit.default).toEither();
 ```
 
 ---
@@ -85,7 +87,12 @@ import { TryAsync } from '@ngwes/mini-fp';
 
 const fetchConfig = (url: string): Promise<Config> =>
   TryAsync.runAsync(() => fetch(url).then(r => r.json()))
-    .onFailAsync(_err => defaultConfig);
+    .onFail(defaultConfig);                            // value, factory, or (err) => value
+
+const loadUser = (id: string) =>                       // EitherAsync<AppError, User>
+  TryAsync.runAsync(() => api.getUser(id))
+    .toEither()
+    .mapLeft(e => ({ code: 'UPSTREAM', message: String(e) }));
 ```
 
 ---

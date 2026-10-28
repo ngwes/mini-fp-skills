@@ -5,7 +5,7 @@ description: API reference for Try<T> and TryAsync<T> from @ngwes/mini-fp.
 
 ## Try\<T\>
 
-Wraps a computation that may throw. Captures the exception instead of propagating it.
+Wraps a computation that may throw. Captures the exception instead of propagating it. **Lazy:** `Try.run(fn)` does not call `fn` — it runs each time the `Try` is consumed (`isSuccess`, `isFailure`, `match`, `onFail`, `onFailAsync`, `toEither`).
 
 ```typescript
 import { Try } from '@ngwes/mini-fp';
@@ -14,61 +14,72 @@ import { Try } from '@ngwes/mini-fp';
 ### Constructors
 
 ```typescript
-Try.run(() => JSON.parse(raw))          // Try<T>      — sync, catches throws
+Try.run(() => JSON.parse(raw))          // Try<T>      — sync, nothing runs yet
 Try.runAsync(() => fetch(url).then(…))  // TryAsync<T> — async, catches throws and rejections
 ```
 
-### State
+### State, memo, transform
 
 ```typescript
-t.isSuccess()  // true if no exception was thrown
-t.isFailure()  // true if exception was caught
+t.isSuccess()  // runs fn — true if no exception was thrown
+t.isFailure()  // runs fn — true if exception was caught
+t.memo()       // Try<T> that keeps the first SUCCESS; a failure is retried on next consumption
+
+Try.run(() => '42').map(s => Number(s))           // Try<number> — throw inside fn → failure
+Try.run(() => readFileSync(path, 'utf-8'))
+  .bind(raw => Try.run(() => JSON.parse(raw)))    // Try<U> — chain another Try
+// map/bind results are memoized like memo()
 ```
 
-### Recover
+### Consume
 
 ```typescript
-// onFail — sync recovery, returns T
-t.onFail(err => defaultValue)
+t.match(value => `got ${value}`, err => `failed: ${err}`)
+t.match(n => n, 0)                    // onFail may be a plain value
 
-// onFailAsync — async recovery, accepts any PromiseLike<T>
-await t.onFailAsync(async err => {
+t.onFail(0)                           // T — value fallback
+t.onFail(() => computeDefault())      // zero-arg factory, only called on failure
+t.onFail(err => { log(err); return -1; })
+
+await t.onFailAsync(async err => {    // accepts any PromiseLike<T>
   await logError(err);
   return fallbackValue;
 })
+
+t.toEither()                          // Either<unknown, T> — right(value) / left(thrown error)
+Try.run(() => JSON.parse(raw)).toEither().mapLeft(e => (e as Error).message)
 ```
 
 ---
 
 ## TryAsync\<T\>
 
-Fluent async wrapper. `Try.runAsync` and `TryAsync.runAsync` are equivalent entry points.
+Lazy async counterpart: nothing runs until it is consumed (`await`, `match`, `onFail`, `onFailAsync`, `toEither`). `Try.runAsync` and `TryAsync.runAsync` are equivalent entry points.
 
 ```typescript
 import { TryAsync } from '@ngwes/mini-fp';
+
+const config = TryAsync.runAsync(() => fetchConfig()).memo(); // keeps first success; pending runs are shared
+
+TryAsync.runAsync(() => fetchSession())
+  .bind(s => TryAsync.runAsync(() => fetchUser(s.userId)))  // chain another TryAsync (memoized)
+  .do(u => console.log('loaded', u.id))                     // side effect, skipped on failure
 ```
 
-### Constructors
+### Consume
 
 ```typescript
-TryAsync.runAsync(() => fetch(url).then(r => r.json()))  // TryAsync<T>
-// equivalent:
-Try.runAsync(() => fetch(url).then(r => r.json()))       // also TryAsync<T>
-```
-
-### Recover
-
-```typescript
-const data = await TryAsync.runAsync(() => fetchRemote())
-  .onFailAsync(async err => {
-    await logError(err);
-    return fallbackData;
-  });
+// ta: TryAsync<T>
+await ta.match(async n => n * 2, 0)                 // Promise<U>; handlers sync or async
+await ta.onFail(async err => { await logError(err); return fallbackData; })  // Promise<T>
+await ta.onFailAsync(e => asTask(Either.left<Error, number>(e as Error)))
+  .map(n => n * 2)       // handler returning PromiseLike<Either<L, R>> → EitherAsync<L, R>
+await ta.toEither().mapLeft(e => (e as Error).message)  // EitherAsync<unknown, T>
 ```
 
 ### Await the underlying Try\<T\>
 
-`TryAsync<T>` implements `PromiseLike<Try<T>>` — `await` resolves to `Try<T>`:
+`TryAsync<T>` implements `PromiseLike<Try<T>>` — `await` runs it and resolves to an evaluated `Try<T>`:
 
 ```typescript
 const t = await TryAsync.runAsync(() => fetchRemote());
@@ -79,6 +90,7 @@ t.isSuccess(); // inspect manually
 
 ## Gotchas
 
+- **Laziness:** without `memo()`, every consumption re-runs the function. `t.isSuccess()` then `t.onFail(x)` runs it twice — call `.memo()` for side-effecting or expensive work.
+- **`memo()` keeps successes only:** a failure is not cached, so the next consumption retries the function.
+- `toEither()` throws (rejects for `TryAsync`) when the value or the thrown error is `null`/`undefined`. For `Try<void>`, map first: `.map(() => Unit.default).toEither()`.
 - `onFailAsync` accepts any `PromiseLike<T>` — including `EitherAsync<L, T>` when `T` is `Either<L, R>`.
-- `Try<T>` has no `map`/`bind`. Inspect with `isSuccess()` and call `onFail`/`onFailAsync`.
-- Prefer `TryAsync.runAsync` for fluent `.onFailAsync()` chains over awaiting `Try.runAsync` manually.

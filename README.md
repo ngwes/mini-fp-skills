@@ -88,7 +88,7 @@ node scripts/run-benchmark.mjs <skill> [--reps N] >> docs/skill-benchmark-runs-l
 | `either` | `Either<L,R>` and `EitherAsync<L,R>` reference |
 | `try` | `Try<T>` and `TryAsync<T>` reference |
 | `validate` | `Validate<L,R>`, `sequenceValidate`, `sequenceValidateAsync` reference |
-| `utils` | `Unit`, traversal functions, `asTask` reference |
+| `utils` | `Unit`, `Union`, traversal functions, functional and list helpers, prelude reference |
 | `error-handling` | Pattern: typed error pipelines |
 | `validation-patterns` | Pattern: form, DTO, and batch validation |
 | `async-pipelines` | Pattern: chaining async operations |

@@ -9,6 +9,7 @@ Unlike `Either`, does **not** short-circuit — accumulates **all** errors acros
 
 ```typescript
 import { Validate } from '@ngwes/mini-fp';
+// prelude: import { valid, invalid } from '@ngwes/mini-fp' — same as Validate.valid / Validate.invalid
 ```
 
 ### Constructors
@@ -32,6 +33,17 @@ v.unwrapInvalid()  // L[]  — throws if valid
 ```typescript
 v.map(x => x * 2)        // Validate<L, U> — transforms valid value
 v.bind(x => validate(x)) // Validate<L, U> — chains validation (short-circuits like Either)
+```
+
+### Errors and pattern match
+
+```typescript
+v.mapInvalid(e => e.length)                 // Validate<U, R> — transforms EACH error; valid untouched
+v.bindInvalid(errors => Validate.valid(0))  // whole L[] → new Validate (recover or replace)
+
+v.match(n => `got ${n}`, errors => errors.join(', '))     // U
+v.match('ok', 'ko')                                       // plain values allowed for either branch
+await v.matchAsync(async n => n * 2, Promise.resolve(0))  // Promise<U>; fn, async fn or PromiseLike
 ```
 
 ### Combine (key feature — accumulates errors)
@@ -93,4 +105,5 @@ const result = await sequenceValidateAsync(
 - `Validate.valid(null)` → throws. Never pass null.
 - `combine` keeps the **first** value when both are valid — the second is discarded.
 - `bind` short-circuits (like `Either`). Use `combine`/`sequenceValidate` to accumulate errors.
+- `mapInvalid` maps **each** error (`L → U`); `bindInvalid` receives the **whole** `L[]`.
 - `sequenceValidateAsync` takes `Promise<Validate<L, R>[]>` (a promise of an array), not `Promise<Validate<L, R>>[]`.
