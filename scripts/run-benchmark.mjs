@@ -33,12 +33,12 @@ const repsIdx = args.indexOf('--reps');
 const REPS = repsIdx !== -1 ? parseInt(args[repsIdx + 1], 10) : 3;
 
 const MODELS = [
-  'claude-haiku-4-5-20251001',
-  'claude-sonnet-4-6',
-  'claude-opus-4-7',
+  'claude-haiku-5-5',
+  'claude-sonnet-5-5',
+  'claude-opus-5-5',
 ];
 
-const GRADER_MODEL = 'claude-haiku-4-5-20251001';
+const GRADER_MODEL = 'claude-haiku-5-5';
 
 // ── Load files ────────────────────────────────────────────────────────────────
 

@@ -32,25 +32,25 @@ Copy and fill in manually for quick directional evals (non-automated runs):
 ## YYYY-MM-DD — <skill> benchmark
 
 Method: <automated via run-benchmark.mjs | quick directional eval via subagent>.
-Models: claude-haiku-4-5-20251001, claude-sonnet-4-6, claude-opus-4-7. Reps: 3.
+Models: claude-haiku-5-5, claude-sonnet-5-5, claude-opus-5-5. Reps: 3.
 
 ### Scenario: <scenario-id> *(critical)*
 
 *<scenario prompt>*
 
-**claude-haiku-4-5**
+**claude-haiku-5-5**
 
 | Criterion | Baseline | With skill | Delta |
 |-----------|----------|------------|-------|
 | <criterion> | 0% | 0% | +0pp |
 
-**claude-sonnet-4-6**
+**claude-sonnet-5-5**
 
 | Criterion | Baseline | With skill | Delta |
 |-----------|----------|------------|-------|
 | <criterion> | 0% | 0% | +0pp |
 
-**claude-opus-4-7**
+**claude-opus-5-5**
 
 | Criterion | Baseline | With skill | Delta |
 |-----------|----------|------------|-------|
