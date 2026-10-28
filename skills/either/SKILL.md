@@ -54,7 +54,7 @@ e.guardMap(x => 'small', [x => x > 3, () => 'large'])           // left is kept,
 e.guardBind(x => Either.right('ok'), [x => x > 3, () => Either.left('too large')])
 // onLeft overload: handle the left too, both sides move to a new Either<A, B>
 e.guardBind(err => Either.right(`recovered: ${err}`), x => Either.right(String(x)))
-// guardMapAsync / guardBindAsync (same onLeft overload) take async functions → EitherAsync
+// guardMapAsync / guardBindAsync take async functions → EitherAsync (only guardBindAsync has the onLeft overload)
 ```
 
 ### Pattern match

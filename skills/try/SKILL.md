@@ -72,9 +72,13 @@ TryAsync.runAsync(() => fetchSession())
 // ta: TryAsync<T>
 await ta.match(async n => n * 2, 0)                 // Promise<U>; handlers sync or async
 await ta.onFail(async err => { await logError(err); return fallbackData; })  // Promise<T>
-await ta.onFailAsync(e => asTask(Either.left<Error, number>(e as Error)))
-  .map(n => n * 2)       // handler returning PromiseLike<Either<L, R>> → EitherAsync<L, R>
+await TryAsync.runAsync(() => fetchRemote())
+  .onFailAsync(async err => { await logError(err); return fallbackData; })   // PromiseLike<T>
 await ta.toEither().mapLeft(e => (e as Error).message)  // EitherAsync<unknown, T>
+
+// when T is Either<L, R>: handler returning PromiseLike<Either<L, R>> → EitherAsync<L, R>
+const te: TryAsync<Either<Error, number>> = TryAsync.runAsync(async () => Either.right<Error, number>(1));
+await te.onFailAsync(e => asTask(Either.left<Error, number>(e as Error))).map(n => n * 2)  // right(2)
 ```
 
 ### Await the underlying Try\<T\>

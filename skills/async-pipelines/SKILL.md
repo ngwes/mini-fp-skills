@@ -97,6 +97,6 @@ const result = await EitherAsync.right<string, number>(42)
 - `mapAsync`/`bindAsync` (and `Option.fromAsync`) return `OptionAsync`/`EitherAsync` — both implement `PromiseLike`, so `await` works directly.
 - `OptionAsync`/`EitherAsync` mirror the sync API: chain `.map()`, `.bind()`, `.filter()`, `.onLeft()`, … on them — no `.then()`, no await between steps. `await` once at the end.
 - `match`/`orElse` on an async wrapper return a `Promise` of the plain value.
-- `TryAsync` is lazy — nothing runs until awaited or consumed. It has `bind`, `do`, `match`, `onFail`, `toEither` (no `map`); use `toEither()` to join an Either pipeline.
+- `TryAsync` is lazy — nothing runs until awaited or consumed. It has `memo`, `bind`, `do`, `match`, `onFail`, `onFailAsync`, `toEither` (no `map`); use `toEither()` to join an Either pipeline.
 
 ---
