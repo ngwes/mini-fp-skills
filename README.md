@@ -63,19 +63,42 @@ Installed as a plugin, every skill is namespaced by the plugin name (for example
 
 ## Skill Benchmarking
 
-The `evals/` and `scripts/run-benchmark.mjs` files exist to verify that each skill actually improves model output before a release — and to block releases when it doesn't.
+Each skill is benchmarked and gated with [skill-be](https://ngwes.github.io/skill-be/) (`@ngwes/skill-be`), configured in `skill-be.yaml`. A release is blocked when a skill does not improve model output, or makes it worse.
 
-**Why:** Skills can fail in two ways: they don't trigger (model ignores the context), or they hurt performance (model produces worse output with the skill than without). Neither failure is visible from reading the skill content alone — you need to run the model and measure.
+**Why:** Skills can fail in two ways: they don't trigger (model ignores the context), or they hurt performance (model produces worse output with the skill than without it). Neither failure is visible from reading the skill content alone — you need to run the model and measure.
 
-**How it works:** For each skill, `evals/<skill>.json` defines 3 scenarios with binary criteria. The runner calls `claude -p` on Sonnet (`claude-sonnet-5-5`), with and without the skill content injected, repeating each run N times. A Haiku-based LLM judge grades all of an output's criteria in one call. Calls run in parallel (`--concurrency N`, default 4), and each `claude -p` is isolated from your settings, plugins, hooks, MCP servers, skills and tools. Results are appended to `docs/skill-benchmark-runs-log.md`. See `docs/skill-benchmark-runs.md` for the full method.
+**How it works:** For each skill, `evals/<skill>.json` defines scenarios with binary criteria. `skill-be run` gives every task to Sonnet (`claude-sonnet-5-5`) twice, alone (baseline) and with the `SKILL.md` content in front of it (with skill), 3 reps each. A Haiku-based judge (`claude-haiku-5-5`) grades each output 3 times against every criterion, and the majority wins. Both models are called through `claude -p`, isolated from your settings, plugins, hooks, MCP servers, skills and tools.
 
-**Release gate** — a change is not ready if:
-- Any criterion is 0% on every model under test (currently Sonnet only) with the skill enabled.
-- Any critical scenario shows a negative delta on any model.
+**Release gate** — a skill is NOT READY if:
+- Any criterion is 0% with the skill (Sonnet is the only model under test).
+- Any criterion of a critical scenario scores lower with the skill than without it.
+- Any output could not be generated or graded.
+
+**Checks (no model call):**
+- Typecheck: the TypeScript code blocks in each `SKILL.md` are compiled against the installed `@ngwes/mini-fp`. A failure blocks.
+- Coverage: lists `@ngwes/mini-fp` exports that no skill or eval mentions. It is reported but does not block.
+
+### Run it locally
+
+You need Node 20 or newer and the `claude` CLI installed and logged in. Leave `ANTHROPIC_API_KEY` unset: `claude` prefers that variable to its login.
 
 ```bash
-node scripts/run-benchmark.mjs <skill> [--reps N] [--concurrency N] >> docs/skill-benchmark-runs-log.md
+npm install
+npm run bench:check          # typecheck + coverage, no model call
+npm run bench                # benchmark every skill; can take an hour
+npx skill-be run option      # benchmark one skill
+npx skill-be triage          # explain why criteria failed in the latest run
+npm run bench:verify         # what CI runs; no model call
 ```
+
+`skill-be run` writes the outputs and reports under `.skill-be/` (not committed) and records each skill's verdict in `skill-be.result.json`. Commit that file with any change to a `SKILL.md`, an eval file or `skill-be.yaml`. A skill's fingerprint covers its `SKILL.md`, its eval file and `skill-be.yaml`, so editing any of them without running the benchmark again makes `verify` fail (a change to `skill-be.yaml` makes every skill stale).
+
+### In CI
+
+`.github/workflows/verify.yml` runs `npx skill-be verify` on pull requests and on pushes to `main`, and `release.yml` runs the same step in a `verify` job that the `release` job needs. It calls no model and needs no secrets. It fails when:
+- a skill changed since its last recorded run;
+- a skill's recorded verdict is NOT READY;
+- the typecheck fails.
 
 ---
 
