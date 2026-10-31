@@ -2836,3 +2836,169 @@ Note: "with skill" injects SKILL.md content as library context in the user promp
 
 **READY** — No universal 0% criteria. No critical regressions.
 
+## 2026-10-31 — option benchmark
+
+Method: automated eval via isolated `claude -p` (no settings, MCP, skills or tools). Models: claude-sonnet-5-5. Reps: 3. Grading: 3 independent claude-haiku-5-5 calls per output, each judging the main solution on all criteria at once; majority vote per criterion.
+Note: "with skill" injects SKILL.md content as library context in the user prompt.
+
+### Scenario: nullable-lookup *(critical)*
+
+*Write a TypeScript function that looks up a user by ID from a Map<string, User>. Handle the case where the user doesn't exist. Do not return null or undefined.*
+
+**claude-sonnet-5-5**
+
+| Criterion | Baseline | With skill | Delta |
+|-----------|----------|------------|-------|
+| Uses Option.from(), Option.some(), or Option.none() (or the equivalent some()/none()/toOption() functions) instead of null/undefined | 0% | 100% | +100pp |
+| Does not return null or undefined directly from the function | 100% | 100% | +0pp |
+| Uses .match() or .orElse() to handle the absent case at the call site | 0% | 100% | +100pp |
+
+### Scenario: chain-optional-steps *(critical)*
+
+*Write TypeScript: given a user ID, get the user from a cache (Map<string, User>), then get their profile (Map<string, Profile>), then get their avatar URL (profile.avatarUrl may be undefined). Each step may return nothing. Chain these safely without nested null checks.*
+
+**claude-sonnet-5-5**
+
+| Criterion | Baseline | With skill | Delta |
+|-----------|----------|------------|-------|
+| Uses .bind() or .bindAsync() to chain optional steps (.map() is also acceptable for reading a field that may be undefined, since map turns null/undefined into none) | 33% | 100% | +67pp |
+| Does not use nested if/null checks between steps | 100% | 100% | +0pp |
+| The chain stops at the first absent value without explicit branching | 33% | 100% | +67pp |
+
+### Scenario: async-nullable-noisy-context
+
+*Express + Redis + Prisma app. Write an async function that gets a session token from Redis (returns string | null), validates it to get a user ID (async, may return null), then loads the user from Prisma (may return null). Return a 404 response if any step returns nothing.*
+
+**claude-sonnet-5-5**
+
+| Criterion | Baseline | With skill | Delta |
+|-----------|----------|------------|-------|
+| Uses Option for absent values instead of null checks | 0% | 100% | +100pp |
+| Uses Option.fromAsync() and/or .bindAsync() for the async optional steps | 0% | 100% | +100pp |
+| Produces the 404/success response with .match() or .orElse() on the async Option chain (these return a Promise there), or with .matchAsync()/.orElseAsync() | 0% | 67% | +67pp |
+
+### Scenario: theme-fallback-chain *(critical)*
+
+*Write TypeScript: resolve a user's UI theme. Read it from userSettings (Map<string, string>, keyed by user ID); the stored value may be missing or may be an unsupported string, and only 'light', 'dark' and 'system' are valid. When the user has no valid theme, write a debug log line, then fall back to the organization default from orgSettings (Map<string, string>, same rules: may be missing or invalid). If that also yields nothing, use 'system'. Write it as one chain, without if statements or null checks.*
+
+**claude-sonnet-5-5**
+
+| Criterion | Baseline | With skill | Delta |
+|-----------|----------|------------|-------|
+| Drops a theme that is not one of the supported values with .filter() on the Option or with the noneWhen predicate of Option.from(value, noneWhen) (instead of an if or a ternary) | 100% | 100% | +0pp |
+| Falls back to the organization default with .bindNone() or .mapNone() on the Option chain (not with nested null checks or by unwrapping the first Option) | 0% | 100% | +100pp |
+| Logs the debug line with .onNone() (or .onSome() for the found case) inside the chain, and still ends with .orElse('system') or .match() to produce the final string | 0% | 100% | +100pp |
+
+### Scenario: cache-then-db-to-either
+
+*Write TypeScript: get a product by SKU. First look in an in-memory cache (Map<string, Product>); if it is not there, load it from the database with db.findProduct(sku): Promise<Product | null>. Write a debug log whenever a product is found. Return an async result that is either a NotFoundError (which must include the SKU) or the Product, so the HTTP layer can turn it into a 404.*
+
+**claude-sonnet-5-5**
+
+| Criterion | Baseline | With skill | Delta |
+|-----------|----------|------------|-------|
+| Falls back to the async database load with .bindNoneAsync() or .mapNoneAsync() on the cache Option, instead of an if/else on the cache result | 0% | 100% | +100pp |
+| Converts the Option (or OptionAsync) into an Either with its .toEither(...) method, passing a NotFoundError value or factory that includes the SKU | 0% | 100% | +100pp |
+| Logs found products with .onSome() in the chain, not with a separate isSome() check or an if | 0% | 100% | +100pp |
+
+### Scenario: loyalty-tier-guards-noisy
+
+*NestJS + TypeORM service. Load a customer's loyalty points from the repository (findPoints(customerId): number | undefined). Map the points to a tier: 10000 or more is 'gold', 5000 or more is 'silver', anything else is 'bronze'. Then pick a coupon for the tier: gold customers get a personal coupon from couponService.personal(customerId): Promise<Coupon>, silver and bronze customers get couponService.standard(tier): Promise<Coupon>. A customer without points gets no coupon. Avoid if/else ladders and nested ternaries; the method returns the coupon as an optional value.*
+
+**claude-sonnet-5-5**
+
+| Criterion | Baseline | With skill | Delta |
+|-----------|----------|------------|-------|
+| Uses .guardMap() with [when, then] guard pairs (and an otherwise function) to map the points to a tier, instead of if/else or a chain of ternaries | 0% | 100% | +100pp |
+| Uses .guardMapAsync() or .guardBindAsync() to choose between the personal and the standard coupon call | 0% | 100% | +100pp |
+| Returns an Option/OptionAsync (or a Promise of an Option) for the coupon, never null/undefined, and an absent customer skips the tier and coupon steps | 67% | 100% | +33pp |
+
+---
+
+## Release Gate
+
+**READY** — No universal 0% criteria. No critical regressions.
+
+## 2026-10-31 — validate benchmark
+
+Method: automated eval via isolated `claude -p` (no settings, MCP, skills or tools). Models: claude-sonnet-5-5. Reps: 3. Grading: 3 independent claude-haiku-5-5 calls per output, each judging the main solution on all criteria at once; majority vote per criterion.
+Note: "with skill" injects SKILL.md content as library context in the user prompt.
+
+### Scenario: accumulate-field-errors *(critical)*
+
+*Write TypeScript validators for a signup form: name (required, non-empty), email (must contain @), age (must be >= 18). Run ALL validators and return ALL errors at once, not just the first one.*
+
+**claude-sonnet-5-5**
+
+| Criterion | Baseline | With skill | Delta |
+|-----------|----------|------------|-------|
+| Uses Validate (not Either) so errors accumulate instead of short-circuiting | 0% | 100% | +100pp |
+| Merges the results of the validators with .combine() or sequenceValidate | 0% | 100% | +100pp |
+| Returns all errors, not just the first one that fails | 100% | 100% | +0pp |
+
+### Scenario: dto-typed-errors *(critical)*
+
+*Write a DTO validator for CreateProductDto: name (non-empty string), price (positive number), stock (non-negative integer). Each validator should return a typed FieldError object with a field name and message. Accumulate ALL errors.*
+
+**claude-sonnet-5-5**
+
+| Criterion | Baseline | With skill | Delta |
+|-----------|----------|------------|-------|
+| Uses Validate.valid() and Validate.invalid() (or the equivalent valid()/invalid() functions) with typed error objects | 0% | 100% | +100pp |
+| Error type includes a field name (not just a plain string) | 100% | 100% | +0pp |
+| Uses .combine() or sequenceValidate to collect all errors from all fields | 0% | 100% | +100pp |
+
+### Scenario: batch-array-validation
+
+*Write TypeScript: validate an array of numbers where each must be positive and less than 1000. Return ALL numbers that fail with their index and reason. Use sequenceValidate.*
+
+**claude-sonnet-5-5**
+
+| Criterion | Baseline | With skill | Delta |
+|-----------|----------|------------|-------|
+| Uses sequenceValidate to validate all items | 100% | 100% | +0pp |
+| Does not short-circuit: all items are validated even after the first failure | 100% | 100% | +0pp |
+| Returns errors from all failing items, not just the first | 100% | 100% | +0pp |
+
+### Scenario: field-errors-to-http-response *(critical)*
+
+*Write TypeScript: existing validators return Validate<string, T> with messages formatted as 'field: reason' (e.g. 'email: must contain @'). For a CreateAccount request (email, password, age), run all the validators and accumulate every error. The HTTP layer needs FieldError objects { field, message } instead of strings. Return { status: 201, body: account } when valid, or { status: 422, body: FieldError[] } listing every error.*
+
+**claude-sonnet-5-5**
+
+| Criterion | Baseline | With skill | Delta |
+|-----------|----------|------------|-------|
+| Converts each string error into a FieldError with .mapInvalid() on the Validate, instead of unwrapInvalid().map(...) inside an isInvalid() branch | 0% | 100% | +100pp |
+| Builds both responses with a single .match() on the combined Validate (no isValid()/unwrap() branching) | 0% | 100% | +100pp |
+| Accumulates the errors of all fields with .combine() or sequenceValidate | 0% | 100% | +100pp |
+
+### Scenario: recover-optional-field
+
+*Write TypeScript: a profile form has username (required, 3-20 chars) and displayName (optional). validateDisplayName(s) returns Validate<string, string> and fails with 'displayName: empty' for an empty value or with other messages such as 'displayName: too long'. When the only problem is that displayName is empty, use the username as the display name instead of failing; any other displayName errors must still be reported. All errors of all fields must be returned together.*
+
+**claude-sonnet-5-5**
+
+| Criterion | Baseline | With skill | Delta |
+|-----------|----------|------------|-------|
+| Uses .bindInvalid() on the displayName Validate to inspect the whole error list and recover with a valid value when the only error is 'empty' | 0% | 100% | +100pp |
+| Keeps the other displayName errors invalid (returns the errors from bindInvalid, or does not recover) instead of dropping them | 100% | 100% | +0pp |
+| Combines the username and displayName results with .combine() (or sequenceValidate) so errors from both fields are reported together | 0% | 100% | +100pp |
+
+### Scenario: async-save-on-valid-noisy
+
+*Express + Prisma signup route. Validate email and password synchronously, and check that the email is not already taken with an async isEmailTaken(email): Promise<boolean>; report all problems together. When everything is valid, save the user with prisma.user.create(...) and respond 201 with the user; otherwise respond 422 with the list of errors.*
+
+**claude-sonnet-5-5**
+
+| Criterion | Baseline | With skill | Delta |
+|-----------|----------|------------|-------|
+| Accumulates the async uniqueness error with the sync errors, via .combineAsync()/sequenceValidateAsync or by awaiting the check and merging its Validate with .combine()/sequenceValidate | 0% | 100% | +100pp |
+| Uses .matchAsync() with an async valid handler that saves the user, and an invalid handler that builds the 422 response | 0% | 100% | +100pp |
+| Does not branch on isValid()/isInvalid() or call unwrap()/unwrapInvalid() to build the responses | 100% | 100% | +0pp |
+
+---
+
+## Release Gate
+
+**READY** — No universal 0% criteria. No critical regressions.
+
