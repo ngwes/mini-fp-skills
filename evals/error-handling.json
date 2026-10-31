@@ -17,7 +17,7 @@
       "prompt": "A third-party crypto library exposes hash(data: string): string but throws on invalid input. Write a TypeScript wrapper that returns Either<Error, string> instead of throwing. Also show how to use it in a pipeline.",
       "criteria": [
         "Uses Try.run() to capture the throw from the third-party function",
-        "Converts the Try result to Either (right on success, left on failure)",
+        "Converts the Try to Either with .toEither() (typically followed by .mapLeft() to get an Error) or with a single .match(), not by consuming the lazy Try twice (e.g. .isSuccess() then .onFail()) without .memo()",
         "No bare try/catch block in the wrapper"
       ]
     },
@@ -26,7 +26,7 @@
       "critical": false,
       "prompt": "Write TypeScript: look up a value from Redis cache (returns Either<'miss', CachedValue>). If cache miss (Left), fall back to a DB query (async, also returns Either<'db_error', DbValue>). If DB also misses, return Left. Show the full fallback chain.",
       "criteria": [
-        "Uses Either.left() to represent cache miss and DB miss",
+        "Uses Either.left() (or the equivalent left() function) to represent cache miss and DB miss",
         "Uses .bindLeftAsync() or .bindLeft() to implement the fallback on Left",
         "Chain stops when the first Right is found (does not always go to DB)"
       ]

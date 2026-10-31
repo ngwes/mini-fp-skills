@@ -6,7 +6,7 @@
       "critical": true,
       "prompt": "Write a TypeScript function that looks up a user by ID from a Map<string, User>. Handle the case where the user doesn't exist. Do not return null or undefined.",
       "criteria": [
-        "Uses Option.from(), Option.some(), or Option.none() instead of null/undefined",
+        "Uses Option.from(), Option.some(), or Option.none() (or the equivalent some()/none()/toOption() functions) instead of null/undefined",
         "Does not return null or undefined directly from the function",
         "Uses .match() or .orElse() to handle the absent case at the call site"
       ]
@@ -16,7 +16,7 @@
       "critical": true,
       "prompt": "Write TypeScript: given a user ID, get the user from a cache (Map<string, User>), then get their profile (Map<string, Profile>), then get their avatar URL (profile.avatarUrl may be undefined). Each step may return nothing. Chain these safely without nested null checks.",
       "criteria": [
-        "Uses .bind() or .bindAsync() to chain optional steps",
+        "Uses .bind() or .bindAsync() to chain optional steps (.map() is also acceptable for reading a field that may be undefined, since map turns null/undefined into none)",
         "Does not use nested if/null checks between steps",
         "The chain stops at the first absent value without explicit branching"
       ]
@@ -27,8 +27,8 @@
       "prompt": "Express + Redis + Prisma app. Write an async function that gets a session token from Redis (returns string | null), validates it to get a user ID (async, may return null), then loads the user from Prisma (may return null). Return a 404 response if any step returns nothing.",
       "criteria": [
         "Uses Option for absent values instead of null checks",
-        "Uses .bindAsync() for async optional steps",
-        "Uses .matchAsync() or .orElseAsync() for the async fallback/response"
+        "Uses Option.fromAsync() and/or .bindAsync() for the async optional steps",
+        "Produces the 404/success response with .match() or .orElse() on the async Option chain (these return a Promise there), or with .matchAsync()/.orElseAsync()"
       ]
     }
   ]

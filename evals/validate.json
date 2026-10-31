@@ -16,7 +16,7 @@
       "critical": true,
       "prompt": "Write a DTO validator for CreateProductDto: name (non-empty string), price (positive number), stock (non-negative integer). Each validator should return a typed FieldError object with a field name and message. Accumulate ALL errors.",
       "criteria": [
-        "Uses Validate.valid() and Validate.invalid() with typed error objects",
+        "Uses Validate.valid() and Validate.invalid() (or the equivalent valid()/invalid() functions) with typed error objects",
         "Error type includes a field name (not just a plain string)",
         "Uses .combine() or sequenceValidate to collect all errors from all fields"
       ]

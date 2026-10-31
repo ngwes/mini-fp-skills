@@ -8,7 +8,7 @@
       "criteria": [
         "Uses Try.run() to wrap the throwing call",
         "Does not use a bare try/catch block",
-        "Uses .onFail() to provide the default value on failure"
+        "Uses .onFail() (with a value, a factory, or an error handler) or .match() with a fallback to provide the default value on failure"
       ]
     },
     {
@@ -18,7 +18,7 @@
       "criteria": [
         "Uses TryAsync.runAsync() or Try.runAsync() to wrap the async operation",
         "Does not use a bare try/catch around the async code",
-        "Uses .onFailAsync() for the error logging and fallback"
+        "Uses .onFail(), .onFailAsync() or .match() on the TryAsync for the error logging and fallback"
       ]
     },
     {
@@ -28,7 +28,7 @@
       "criteria": [
         "Uses Try or TryAsync to capture the thrown error",
         "No bare try/catch block present",
-        "Uses .isSuccess() / .isFailure() or .onFail() to inspect and handle the error"
+        "Handles the error with .match(), .onFail()/.onFailAsync(), .toEither(), or .isSuccess()/.isFailure() on the awaited Try, without consuming an un-memoized TryAsync more than once (each consumption re-runs the query)"
       ]
     }
   ]
