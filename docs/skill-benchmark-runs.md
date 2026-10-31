@@ -4,8 +4,20 @@ Evaluation log for `@ngwes/mini-fp` skills.
 
 Run with:
 ```bash
-node scripts/run-benchmark.mjs <skill> [--reps N] >> docs/skill-benchmark-runs-log.md
+node scripts/run-benchmark.mjs <skill> [--reps N] [--concurrency N] >> docs/skill-benchmark-runs-log.md
 ```
+
+---
+
+## Method
+
+For each scenario in `evals/<skill>.json`, each model and each rep, the runner makes two generation calls: the scenario prompt alone (baseline), and the same prompt with `skills/<skill>/SKILL.md` injected as library docs (with skill).
+
+- **Grading:** each output is graded in one Haiku call that answers every criterion of the scenario at once, as one `<number>: YES|NO` line per criterion. If the answer doesn't give exactly one verdict per criterion, the call is retried once. If the retry fails too, those criteria count as 0 and the report shows an `[ERROR]` note under the scenario's table and in the Release Gate.
+- **Concurrency:** independent calls run in parallel, at most `--concurrency` at a time (default 4). The report is assembled after every call finishes, so it has the same order as a sequential run. Each call still has a 120 s timeout, and a failed call is reported as `[ERROR]` and counted as 0.
+- **Isolated `claude -p`:** every call runs with `--setting-sources ''` (no user, project or local settings, so no plugins, hooks or effort overrides), `--strict-mcp-config` (no MCP servers), `--disable-slash-commands` (no skills or commands), `--tools ''` (no tools: the model writes code in its answer and can't touch files), an appended system prompt that says no tools are available, and `--no-session-persistence`. Authentication uses the normal `claude` login.
+
+Runs before this method graded each criterion in its own call, ran calls one at a time and used the user's `claude` environment. Their report's `Method:` line has no `Grading:` part.
 
 ---
 
