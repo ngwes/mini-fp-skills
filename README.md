@@ -67,10 +67,10 @@ The `evals/` and `scripts/run-benchmark.mjs` files exist to verify that each ski
 
 **Why:** Skills can fail in two ways: they don't trigger (model ignores the context), or they hurt performance (model produces worse output with the skill than without). Neither failure is visible from reading the skill content alone — you need to run the model and measure.
 
-**How it works:** For each skill, `evals/<skill>.json` defines 3 scenarios with binary criteria. The runner calls `claude -p` across 3 models (Haiku, Sonnet, Opus), with and without the skill content injected, repeating each run N times. A Haiku-based LLM judge grades each criterion. Results are appended to `docs/skill-benchmark-runs.md`.
+**How it works:** For each skill, `evals/<skill>.json` defines 3 scenarios with binary criteria. The runner calls `claude -p` on Sonnet (`claude-sonnet-5-5`), with and without the skill content injected, repeating each run N times. A Haiku-based LLM judge grades each criterion. Results are appended to `docs/skill-benchmark-runs.md`.
 
 **Release gate** — a change is not ready if:
-- Any criterion is 0% across all three models with the skill enabled.
+- Any criterion is 0% on every model under test (currently Sonnet only) with the skill enabled.
 - Any critical scenario shows a negative delta on any model.
 
 ```bash

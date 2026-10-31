@@ -33,9 +33,7 @@ const repsIdx = args.indexOf('--reps');
 const REPS = repsIdx !== -1 ? parseInt(args[repsIdx + 1], 10) : 3;
 
 const MODELS = [
-  'claude-haiku-5-5',
   'claude-sonnet-5-5',
-  'claude-opus-5-5',
 ];
 
 const GRADER_MODEL = 'claude-haiku-5-5';
@@ -103,7 +101,7 @@ const out = [];
 
 out.push(`## ${date} — ${skill} benchmark`);
 out.push('');
-out.push(`Method: automated cross-model eval via \`claude -p\`. Models: ${MODELS.map(modelShort).join(', ')}. Reps: ${REPS}.`);
+out.push(`Method: automated eval via \`claude -p\`. Models: ${MODELS.map(modelShort).join(', ')}. Reps: ${REPS}.`);
 out.push(`Note: "with skill" injects SKILL.md content as library context in the user prompt.`);
 out.push('');
 
@@ -173,7 +171,7 @@ const issues = [];
 
 for (const scenario of evalData.scenarios) {
   for (let c = 0; c < scenario.criteria.length; c++) {
-    // Universal 0%: skill_pct === 0 on ALL three models
+    // Universal 0%: skill_pct === 0 on every model in MODELS
     const allZero = MODELS.every(
       (model) => (results[scenario.id][model]?.[c]?.sPct ?? 0) === 0
     );

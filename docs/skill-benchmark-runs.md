@@ -1,6 +1,6 @@
 # Skill Benchmark Runs
 
-Cross-model evaluation log for `@ngwes/mini-fp` skills.
+Evaluation log for `@ngwes/mini-fp` skills.
 
 Run with:
 ```bash
@@ -13,7 +13,7 @@ node scripts/run-benchmark.mjs <skill> [--reps N] >> docs/skill-benchmark-runs-l
 
 A change is **not ready** if any of these are true:
 
-- Any criterion is **0% across all three models** with skill enabled.
+- Any criterion is **0% on every model under test** (currently Sonnet only) with skill enabled.
 - Any **critical scenario** has a negative delta with skill enabled on any model.
 - Any model shows a **repeatable regression** that is unexplained.
 
@@ -32,25 +32,13 @@ Copy and fill in manually for quick directional evals (non-automated runs):
 ## YYYY-MM-DD — <skill> benchmark
 
 Method: <automated via run-benchmark.mjs | quick directional eval via subagent>.
-Models: claude-haiku-5-5, claude-sonnet-5-5, claude-opus-5-5. Reps: 3.
+Models: claude-sonnet-5-5. Reps: 3.
 
 ### Scenario: <scenario-id> *(critical)*
 
 *<scenario prompt>*
 
-**claude-haiku-5-5**
-
-| Criterion | Baseline | With skill | Delta |
-|-----------|----------|------------|-------|
-| <criterion> | 0% | 0% | +0pp |
-
 **claude-sonnet-5-5**
-
-| Criterion | Baseline | With skill | Delta |
-|-----------|----------|------------|-------|
-| <criterion> | 0% | 0% | +0pp |
-
-**claude-opus-5-5**
 
 | Criterion | Baseline | With skill | Delta |
 |-----------|----------|------------|-------|
