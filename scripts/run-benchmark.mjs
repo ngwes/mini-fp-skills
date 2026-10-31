@@ -8,9 +8,13 @@
  *   node scripts/run-benchmark.mjs either --reps 5 --concurrency 8
  *
  * For each scenario × model × rep, the runner generates two outputs (baseline, and with
- * SKILL.md injected) and grades each output in a single Haiku call that answers every
- * criterion at once ("<n>: YES|NO" per line). An unparseable answer is retried once; if
- * it fails again those criteria count as 0 and the report shows an [ERROR] note.
+ * SKILL.md injected) and grades each output GRADINGS (3) times, in independent Haiku calls.
+ * Each call gets the output fenced in <answer> tags, judges the main solution against every
+ * criterion at once, gives one short reason per criterion and ends with a "VERDICTS:" block
+ * of "<n>: YES|NO" lines; only that final block is parsed. An unparseable answer is retried
+ * once. Each criterion takes the majority of the gradings that succeeded; a tie between two
+ * counts as NO and the report shows a [NOTE]. If every grading fails, those criteria count
+ * as 0 and the report shows an [ERROR] note.
  * Independent calls run in parallel, at most --concurrency at a time
  * (default 4). The report is assembled only after all calls finish, so its order matches
  * a sequential run.
@@ -63,6 +67,9 @@ const MODELS = [
 ];
 
 const GRADER_MODEL = 'claude-haiku-5-5';
+
+// Independent gradings per output; each criterion takes their majority.
+const GRADINGS = 3;
 
 const CALL_TIMEOUT_MS = 120_000;
 
@@ -175,22 +182,38 @@ function runClaude(prompt, model) {
 
 function graderPrompt(criteria, codeOutput) {
   const n = criteria.length;
-  const example = criteria.map((_, i) => `${i + 1}: YES`).join('\n');
   return (
-    `You are a strict code evaluator. Judge the code below against each numbered criterion separately, ` +
-    `as if it were the only one. A criterion is met only if the code uses exactly the APIs it names ` +
-    `and avoids everything it excludes.\n\n` +
+    `You are a strict code evaluator. Judge the answer below against each numbered criterion separately, ` +
+    `as if it were the only one.\n\n` +
+    `Rules:\n` +
+    `- Everything inside <answer> is the code under review, including usage examples, call-site snippets ` +
+    `and optional alternatives.\n` +
+    `- A criterion is decided by the answer's main solution: it is met when the main solution does what ` +
+    `the criterion asks, with one of the APIs it names. Logic inside helper functions the main solution ` +
+    `uses counts. Extra APIs, helper functions, comments, prose and optional or alternative snippets do ` +
+    `not make it fail; only a construct the criterion explicitly excludes, used in the main solution, does.\n` +
+    `- \`await\` inside a step's own callback or helper is not an \`await\` "between chain steps".\n` +
+    `- Assume the library's methods behave as their names and the criterion say. Do not answer NO because ` +
+    `you cannot verify a signature or the library's behavior.\n\n` +
     `Criteria:\n${criteria.map((c, i) => `${i + 1}. ${c}`).join('\n')}\n\n` +
-    `Code to evaluate:\n${codeOutput}\n\n` +
-    `Does the code satisfy each criterion? Answer with exactly ${n} line${n === 1 ? '' : 's'} and nothing else, ` +
-    `one per criterion in order, each in the form "<number>: YES" or "<number>: NO". Example of the format:\n${example}`
+    `<answer>\n${codeOutput}\n</answer>\n\n` +
+    `First, for each criterion in order, write one short reason citing the code that decides it. ` +
+    `Then end your reply with a line "VERDICTS:" followed by exactly ${n} line${n === 1 ? '' : 's'}, ` +
+    `one per criterion in order, each in the form "<number>: YES" or "<number>: NO", and nothing after them.`
   );
 }
 
-// Returns one 0/1 verdict per criterion, or null unless every criterion has exactly one verdict.
+// Reads only the final "VERDICTS:" block. Returns one 0/1 verdict per criterion, or null
+// unless that block gives every criterion exactly one verdict.
 function parseVerdicts(answer, n) {
+  const lines = answer.split(/\r?\n/);
+  let start = -1;
+  lines.forEach((line, i) => {
+    if (/^[\s#*>_-]*VERDICTS[\s*_]*:[\s*_]*$/i.test(line)) start = i;
+  });
+  if (start === -1) return null;
   const verdicts = new Array(n).fill(null);
-  for (const line of answer.split(/\r?\n/)) {
+  for (const line of lines.slice(start + 1)) {
     const m = line.match(/^[\s*>-]*(\d+)\s*[:.)\]-]?[\s*]*(YES|NO)\b/i);
     if (!m) continue;
     const idx = Number(m[1]) - 1;
@@ -200,10 +223,9 @@ function parseVerdicts(answer, n) {
   return verdicts.includes(null) ? null : verdicts;
 }
 
-// Grades all criteria in one call, retrying once if the answer can't be parsed.
-// Returns { verdicts, error }; on a second failure every verdict is 0 and error says why.
-async function grade(criteria, codeOutput) {
-  const prompt = graderPrompt(criteria, codeOutput);
+// One grading call, retried once if the answer can't be parsed.
+// Returns { verdicts, error }; on a second failure verdicts is null and error says why.
+async function gradeOnce(prompt, n) {
   let problem = '';
   for (let attempt = 1; attempt <= 2; attempt++) {
     const answer = await runClaude(prompt, GRADER_MODEL);
@@ -211,11 +233,48 @@ async function grade(criteria, codeOutput) {
       problem = errorMessage(answer);
       continue;
     }
-    const verdicts = parseVerdicts(answer, criteria.length);
+    const verdicts = parseVerdicts(answer, n);
     if (verdicts) return { verdicts, error: null };
-    problem = `unparseable grader answer: ${JSON.stringify(answer.slice(0, 200))}`;
+    problem = `unparseable grader answer: ${JSON.stringify(answer.slice(-200))}`;
   }
-  return { verdicts: new Array(criteria.length).fill(0), error: problem };
+  return { verdicts: null, error: problem };
+}
+
+// Majority per criterion over the successful gradings; a tie counts as NO.
+// Returns { verdicts, ties } where ties lists the 1-based criteria that tied.
+function majority(gradings, n) {
+  const verdicts = [];
+  const ties = [];
+  for (let c = 0; c < n; c++) {
+    const yes = gradings.reduce((a, g) => a + g[c], 0);
+    if (yes * 2 === gradings.length) ties.push(c + 1);
+    verdicts.push(yes * 2 > gradings.length ? 1 : 0);
+  }
+  return { verdicts, ties };
+}
+
+// Grades all criteria GRADINGS times in parallel and takes the majority of the gradings
+// that succeeded. Returns { verdicts, error, notes }; if every grading fails, every verdict
+// is 0 and error says why.
+async function grade(criteria, codeOutput) {
+  const n = criteria.length;
+  const prompt = graderPrompt(criteria, codeOutput);
+  const results = await Promise.all(Array.from({ length: GRADINGS }, () => gradeOnce(prompt, n)));
+  const ok = results.filter((r) => r.verdicts).map((r) => r.verdicts);
+  const failed = results.filter((r) => !r.verdicts).map((r) => r.error);
+  if (ok.length === 0) {
+    return { verdicts: new Array(n).fill(0), error: failed[0], notes: [] };
+  }
+  const notes = failed.map(
+    (e) => `1 of ${GRADINGS} gradings failed after retry and was left out of the vote: ${e}`
+  );
+  const { verdicts, ties } = majority(ok, n);
+  if (ties.length > 0) {
+    notes.push(
+      `criteri${ties.length === 1 ? 'on' : 'a'} ${ties.join(', ')} tied between ${ok.length} gradings, counted as NO`
+    );
+  }
+  return { verdicts, error: null, notes };
 }
 
 function fmtPct(n, reps) {
@@ -244,7 +303,7 @@ process.stderr.write(
   `${skill}: ${evalData.scenarios.length} scenarios × ${MODELS.length} model(s) × ${REPS} reps, concurrency ${CONCURRENCY}\n`
 );
 
-// Generates one output and grades it. Returns { verdicts, errors }.
+// Generates one output and grades it. Returns { verdicts, errors, notes }.
 async function generateAndGrade(scenario, model, prompt, tag) {
   const t0 = Date.now();
   const output = await runClaude(prompt, model);
@@ -253,16 +312,18 @@ async function generateAndGrade(scenario, model, prompt, tag) {
     return {
       verdicts: new Array(scenario.criteria.length).fill(0),
       errors: [`generation failed, criteria counted as 0: ${errorMessage(output)}`],
+      notes: [],
     };
   }
-  const { verdicts, error } = await grade(scenario.criteria, output);
+  const { verdicts, error, notes } = await grade(scenario.criteria, output);
   const yes = verdicts.reduce((a, b) => a + b, 0);
   process.stderr.write(
     `  ${tag}: ${error ? 'grading FAILED' : `${yes}/${verdicts.length} YES`} (${fmtSecs(Date.now() - t0)})\n`
   );
   return {
     verdicts,
-    errors: error ? [`grading failed after retry, criteria counted as 0: ${error}`] : [],
+    errors: error ? [`every grading failed after retry, criteria counted as 0: ${error}`] : [],
+    notes,
   };
 }
 
@@ -288,6 +349,10 @@ async function runRep(scenario, model, r) {
       ...baseline.errors.map((e) => `rep ${r + 1} baseline — ${e}`),
       ...withSkill.errors.map((e) => `rep ${r + 1} with skill — ${e}`),
     ],
+    notes: [
+      ...baseline.notes.map((e) => `rep ${r + 1} baseline — ${e}`),
+      ...withSkill.notes.map((e) => `rep ${r + 1} with skill — ${e}`),
+    ],
   };
 }
 
@@ -312,7 +377,8 @@ out.push('');
 out.push(
   `Method: automated eval via isolated \`claude -p\` (no settings, MCP, skills or tools). ` +
   `Models: ${MODELS.map(modelShort).join(', ')}. Reps: ${REPS}. ` +
-  `Grading: one ${modelShort(GRADER_MODEL)} call per output, all criteria at once.`
+  `Grading: ${GRADINGS} independent ${modelShort(GRADER_MODEL)} calls per output, each judging the main ` +
+  `solution on all criteria at once; majority vote per criterion.`
 );
 out.push(`Note: "with skill" injects SKILL.md content as library context in the user prompt.`);
 out.push('');
@@ -336,6 +402,7 @@ for (const scenario of evalData.scenarios) {
     const bCounts = new Array(scenario.criteria.length).fill(0);
     const sCounts = new Array(scenario.criteria.length).fill(0);
     const errors = [];
+    const notes = [];
 
     for (const rep of reps) {
       for (let c = 0; c < scenario.criteria.length; c++) {
@@ -343,6 +410,7 @@ for (const scenario of evalData.scenarios) {
         sCounts[c] += rep.withSkill.verdicts[c];
       }
       errors.push(...rep.errors);
+      notes.push(...rep.notes);
     }
 
     // Build per-model table
@@ -361,9 +429,10 @@ for (const scenario of evalData.scenarios) {
       results[scenario.id][model][c] = { bPct, sPct, delta };
     }
 
-    if (errors.length > 0) {
+    if (errors.length > 0 || notes.length > 0) {
       out.push('');
       errors.forEach((e) => out.push(`- [ERROR] ${e}`));
+      notes.forEach((e) => out.push(`- [NOTE] ${e}`));
       errorCount += errors.length;
     }
 
