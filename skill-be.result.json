@@ -1,0 +1,95 @@
+{
+  "skillBeVersion": "1.0.1",
+  "skills": {
+    "async-pipelines": {
+      "date": "2026-10-31",
+      "fingerprint": "bb8b13e136935e60ce5c65b659aaa8fff7939d7694ea6b0af6fed1c4e5899fc6",
+      "ready": true,
+      "reasons": [],
+      "models": [
+        "claude-sonnet-5-5"
+      ],
+      "grader": "claude-haiku-5-5"
+    },
+    "either": {
+      "date": "2026-10-31",
+      "fingerprint": "d5a3e1c2dfd64c0be293015709aeb4ea48761474cd2d1236b8061b626f285845",
+      "ready": true,
+      "reasons": [],
+      "models": [
+        "claude-sonnet-5-5"
+      ],
+      "grader": "claude-haiku-5-5"
+    },
+    "error-handling": {
+      "date": "2026-10-31",
+      "fingerprint": "13979dac256394a1b28d30896084ceb48b8ae8a8c3b66bcaf8be9e362e88eb8e",
+      "ready": true,
+      "reasons": [],
+      "models": [
+        "claude-sonnet-5-5"
+      ],
+      "grader": "claude-haiku-5-5"
+    },
+    "mini-fp": {
+      "date": "2026-10-31",
+      "fingerprint": "c25a7dbf517a385fb99eea3f85d41b71c19db3fbbf232ced6d46729ac52b036d",
+      "ready": true,
+      "reasons": [],
+      "models": [
+        "claude-sonnet-5-5"
+      ],
+      "grader": "claude-haiku-5-5"
+    },
+    "option": {
+      "date": "2026-10-31",
+      "fingerprint": "035aa35f5107602b58a58abe7ac9641f7ffbf11cb8102b296f715f0436d683f0",
+      "ready": true,
+      "reasons": [],
+      "models": [
+        "claude-sonnet-5-5"
+      ],
+      "grader": "claude-haiku-5-5"
+    },
+    "try": {
+      "date": "2026-10-31",
+      "fingerprint": "8bcca57830b9a56d5a4670b62234f85e444c92adb91874424277a58e0a757e47",
+      "ready": true,
+      "reasons": [],
+      "models": [
+        "claude-sonnet-5-5"
+      ],
+      "grader": "claude-haiku-5-5"
+    },
+    "utils": {
+      "date": "2026-10-31",
+      "fingerprint": "c1f53e151d73ccfcca74b686c57fb4e92b4992d8cfca5ae010e5969d5551c6b1",
+      "ready": true,
+      "reasons": [],
+      "models": [
+        "claude-sonnet-5-5"
+      ],
+      "grader": "claude-haiku-5-5"
+    },
+    "validate": {
+      "date": "2026-10-31",
+      "fingerprint": "0c699de3aad73db6e24fccfd995f64a73bc507976d8ae2098c12b322ec4c382b",
+      "ready": true,
+      "reasons": [],
+      "models": [
+        "claude-sonnet-5-5"
+      ],
+      "grader": "claude-haiku-5-5"
+    },
+    "validation-patterns": {
+      "date": "2026-10-31",
+      "fingerprint": "72920b11135c801052ab934f307042c4234b98475edc38603881fe95ea16cd60",
+      "ready": true,
+      "reasons": [],
+      "models": [
+        "claude-sonnet-5-5"
+      ],
+      "grader": "claude-haiku-5-5"
+    }
+  }
+}
