@@ -765,3 +765,52 @@ Note: "with skill" injects SKILL.md content as library context in the user promp
 
 **READY** — No universal 0% criteria. No critical regressions.
 
+## 2026-10-31 — option benchmark
+
+Method: automated eval via `claude -p`. Models: claude-sonnet-5-5. Reps: 3.
+Note: "with skill" injects SKILL.md content as library context in the user prompt.
+
+### Scenario: nullable-lookup *(critical)*
+
+*Write a TypeScript function that looks up a user by ID from a Map<string, User>. Handle the case where the user doesn't exist. Do not return null or undefined.*
+
+**claude-sonnet-5-5**
+
+| Criterion | Baseline | With skill | Delta |
+|-----------|----------|------------|-------|
+| Uses Option.from(), Option.some(), or Option.none() (or the equivalent some()/none()/toOption() functions) instead of null/undefined | 100% | 100% | +0pp |
+| Does not return null or undefined directly from the function | 100% | 100% | +0pp |
+| Uses .match() or .orElse() to handle the absent case at the call site | 100% | 33% | -67pp |
+
+### Scenario: chain-optional-steps *(critical)*
+
+*Write TypeScript: given a user ID, get the user from a cache (Map<string, User>), then get their profile (Map<string, Profile>), then get their avatar URL (profile.avatarUrl may be undefined). Each step may return nothing. Chain these safely without nested null checks.*
+
+**claude-sonnet-5-5**
+
+| Criterion | Baseline | With skill | Delta |
+|-----------|----------|------------|-------|
+| Uses .bind() or .bindAsync() to chain optional steps (.map() is also acceptable for reading a field that may be undefined, since map turns null/undefined into none) | 100% | 100% | +0pp |
+| Does not use nested if/null checks between steps | 100% | 100% | +0pp |
+| The chain stops at the first absent value without explicit branching | 100% | 100% | +0pp |
+
+### Scenario: async-nullable-noisy-context
+
+*Express + Redis + Prisma app. Write an async function that gets a session token from Redis (returns string | null), validates it to get a user ID (async, may return null), then loads the user from Prisma (may return null). Return a 404 response if any step returns nothing.*
+
+**claude-sonnet-5-5**
+
+| Criterion | Baseline | With skill | Delta |
+|-----------|----------|------------|-------|
+| Uses Option for absent values instead of null checks | 100% | 100% | +0pp |
+| Uses Option.fromAsync() and/or .bindAsync() for the async optional steps | 100% | 100% | +0pp |
+| Produces the 404/success response with .match() or .orElse() on the async Option chain (these return a Promise there), or with .matchAsync()/.orElseAsync() | 100% | 100% | +0pp |
+
+---
+
+## Release Gate
+
+- **BLOCKED** (regression): `nullable-lookup` / claude-sonnet-5-5 — *"Uses .match() or .orElse() to handle the absent case at the call site"*: 100% → 33% (-67pp)
+
+**NOT READY**
+
