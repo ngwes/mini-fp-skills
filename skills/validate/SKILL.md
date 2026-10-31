@@ -68,6 +68,8 @@ await v.combineAsync(Promise.resolve(Validate.invalid(['async error'])))
 
 ### Recipe: one object from validators of different value types
 
+Only for mixed value types: when every field has the same value type, use `.combine()` or `sequenceValidate` directly.
+
 Widen the field validators to a common value type, run them through `sequenceValidate` to collect every error, then `.map` to build the object. `unwrap()` is safe inside `map`, which only runs when every field is valid.
 
 ```typescript
