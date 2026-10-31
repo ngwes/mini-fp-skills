@@ -9,6 +9,7 @@ Represents a value that may or may not be present. Replaces `null`/`undefined` c
 
 ```typescript
 import { Option } from '@ngwes/mini-fp';
+// prelude: import { some, none } from '@ngwes/mini-fp' — same as Option.some / Option.none
 ```
 
 ### Constructors
@@ -18,7 +19,7 @@ Option.some(value)               // wraps value — throws if null/undefined
 Option.none<T>()                 // represents absence
 Option.from(value)               // null/undefined → none, otherwise some
 Option.from(value, noneWhen)     // none if predicate returns true
-await Option.fromAsync(promise)  // awaits promise, null/undefined → none
+Option.fromAsync(promise)        // OptionAsync<T> — null/undefined → none
 ```
 
 ### State
@@ -29,75 +30,88 @@ opt.isNone()  // true if absent
 opt.unwrap()  // returns value — throws if none
 ```
 
-### Transform
+### Transform, filter, side effects
 
 ```typescript
-opt.map(x => x * 2)              // Option<U> — applies fn if some, skips if none
-await opt.mapAsync(async x => …) // Promise<Option<U>>
+opt.map(x => x * 2)               // Option<U> — applies fn if some, skips if none
+opt.mapAsync(async x => …)        // OptionAsync<U>
+opt.filter(x => x > 2)            // keeps some only when the predicate holds
+opt.onSome(x => log(x))           // runs on some, returns the same Option
+opt.onNone(() => warn('missing')) // runs on none, returns the same Option
 ```
 
 ### Chain (flatMap)
 
 ```typescript
-opt.bind(x => Option.from(lookup(x)))  // Option<U> — prevents Option<Option<T>>
+opt.bind(x => Option.from(lookup(x)))                 // Option<U> — prevents Option<Option<T>>
+opt.bindAsync(async x => Option.from(await fetch(x))) // OptionAsync<U>
 ```
 
-### Pattern match
+### Recover from none
 
 ```typescript
-opt.match(
-  value => `found: ${value}`,
-  ()    => 'not found'
-)
-await opt.matchAsync(
-  async value => fetchDetails(value),
-  async ()    => defaultDetails()
-)
+opt.mapNone(() => 7)                                    // none → Option.from(7); some untouched
+opt.bindNone(() => Option.from(db.get(key)))            // none → another Option
+opt.bindNoneAsync(() => Option.fromAsync(db.load(key))) // OptionAsync<T> (also mapNoneAsync)
 ```
 
-### Fallback
+### Guards
 
 ```typescript
+// Guard<T, U> = [when, then]: the first guard whose `when` holds wins, else the first argument
+opt.guardMap(x => 'small', [x => x > 3, () => 'large'], [x => x > 1, () => 'medium'])
+opt.guardBind(x => Option.some('ok'), [x => x < 0, () => Option.none<string>()])
+
+// guardMapAsync / guardBindAsync → OptionAsync
+await opt.guardMapAsync(id => fetchName(id), [id => id === 0, async () => 'root'])
+await opt.guardBindAsync(id => Option.fromAsync(db.find(id)), [id => id < 0, async () => Option.none<User>()])
+```
+
+In the async variants each `when` stays synchronous and must return a `boolean`. `otherwise` and every `then` must return a `PromiseLike`, so write `async () => 'root'` even for a constant.
+
+### Pattern match, fallback, convert
+
+```typescript
+opt.match(value => `found: ${value}`, () => 'not found')
+await opt.matchAsync(async value => fetchDetails(value), async () => defaultDetails())
+
 opt.orElse(defaultValue)                   // T — returns value or default
 opt.orElse(() => compute())                // T — lazy factory, only called if none
 await opt.orElseAsync(async () => fetch()) // Promise<T>
+
+opt.toEither('missing')                    // Either<string, T> — some → right, none → left
+opt.toEither(() => new NotFoundError(id))  // factory runs only on none
 ```
 
 ---
 
 ## OptionAsync\<T\>
 
-Returned by `opt.bindAsync(...)`. Wraps `Promise<Option<T>>`, implements `PromiseLike` — chainable and awaitable.
+Returned by `fromAsync`, `mapAsync`, `bindAsync`, `mapNoneAsync`, `bindNoneAsync`, `guardMapAsync` and `guardBindAsync`. Wraps `Promise<Option<T>>`, implements `PromiseLike` and **mirrors the `Option` API** (`map`, `bind`, `filter`, `onSome`, `onNone`, `mapNone`, `bindNone`, `guardMap`, `guardBind`, their `Async` variants, `toEither`, `match`, `orElse`, …).
 
 ```typescript
 import { Option, OptionAsync } from '@ngwes/mini-fp';
+
+OptionAsync.from(Promise.resolve(Option.some(42)))  // wrap a Promise<Option<T>>
+OptionAsync.some(42)                                 // already-resolved some
+OptionAsync.none<number>()                           // already-resolved none
 ```
 
-### Entry points
+### Chain sync and async steps — no `.then()`
 
 ```typescript
-// From Option instance
-Option.from(value).bindAsync(async x => Option.from(await fetch(x)))
-// Returns OptionAsync<U> — chain more .bindAsync() or await directly
-
-// From raw promise
-OptionAsync.from(Promise.resolve(Option.some(42)))
-```
-
-### Chain
-
-```typescript
-await Option.from(token)
-  .bindAsync(async t  => Option.from(await auth.validate(t)))
-  .bindAsync(async id => Option.from(await db.users.find(id)))
+const email = await Option.fromAsync(db.findUser(id))
+  .filter(u => u.active)
+  .bindAsync(u => Option.fromAsync(db.findProfile(u.id)))
+  .map(p => p.email)
+  .orElse('unknown');   // string
 // Stops at first none — downstream steps are skipped
+
+opt.bindAsync(existingPromise)  // also accepts a PromiseLike<Option<U>> directly
 ```
 
-### Also accepts a Promise directly
-
-```typescript
-opt.bindAsync(existingPromise)  // OptionAsync<U>
-```
+- `match`, `matchAsync`, `orElse` and `orElseAsync` return a `Promise` of the plain value.
+- `toEither` returns an `EitherAsync<L, T>`.
 
 ---
 
@@ -105,5 +119,5 @@ opt.bindAsync(existingPromise)  // OptionAsync<U>
 
 - `Option.some(null)` → throws. Use `Option.from(null)` instead.
 - `opt.unwrap()` on none → throws. Check `isSome()` first, or use `match`/`orElse`.
-- `map` expects a plain value; `bind` expects a function returning `Option<U>`.
-- `bindAsync` returns `OptionAsync`, not a plain `Promise` — but it implements `PromiseLike` so `await` works directly.
+- `map` expects a plain value; `bind` expects a function returning `Option<U>`. `map`/`mapNone` wrap the result with `Option.from`, so `null` becomes none.
+- `fromAsync`, `mapAsync` and `bindAsync` return `OptionAsync`, not a plain `Promise` — keep chaining on it and `await` once at the end to get the `Option`.

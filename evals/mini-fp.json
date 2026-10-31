@@ -1,0 +1,35 @@
+{
+  "skill": "mini-fp",
+  "scenarios": [
+    {
+      "id": "choose-type-per-step",
+      "critical": true,
+      "prompt": "Write a TypeScript user-registration module with @ngwes/mini-fp: (1) find an existing account by email in a Map<string, Account> (it may not exist); (2) validate the signup form (name, email, password) and report every problem to the user at once; (3) hash the password with a third-party hashPassword(raw) that throws on invalid input; (4) persist the account, where saving can fail with a DUPLICATE or DB_DOWN error and the flow must stop at the first failure.",
+      "criteria": [
+        "Uses Option (not null/undefined) for the account lookup",
+        "Uses Validate for the form so all errors are collected, and Either with a typed error for the persistence flow",
+        "Uses Try (Try.run, Try.runAsync or TryAsync.runAsync) to wrap the throwing hashPassword call, not a bare try/catch"
+      ]
+    },
+    {
+      "id": "terse-prelude-constructors",
+      "critical": false,
+      "prompt": "Write small TypeScript helpers with @ngwes/mini-fp: parseAge(raw: string) that fails with a message unless raw is an integer from 0 to 150; firstAdmin(users: User[]) that may find nobody; and checkSku(sku: string) that reports every problem with the SKU (length, prefix, characters) at once. The team's style guide asks for the shortest constructor calls the library offers.",
+      "criteria": [
+        "Builds Either values with the plain right()/left() functions imported from '@ngwes/mini-fp' rather than Either.right/Either.left",
+        "Builds Option values with the plain some()/none() functions rather than Option.some/Option.none (Option.from or toOption for a nullable value is also fine)",
+        "Builds Validate values with the plain valid()/invalid() functions rather than Validate.valid/Validate.invalid"
+      ]
+    },
+    {
+      "id": "payments-module-noisy",
+      "critical": false,
+      "prompt": "Next.js API route with Prisma and Stripe. A payout can go to a card or to a bank account; both are normal, equally valid destinations (neither is an error). A batch payout produced results: Either<PayoutError, Receipt>[]; respond with the receipt IDs that succeeded and the error codes that failed. The recipient's phone comes from the database as string | null | undefined and must be handled without null checks.",
+      "criteria": [
+        "Models the destination as Union<Card, BankAccount> (not Either and not a hand-written discriminated union)",
+        "Extracts receipt IDs and error codes with the list helpers (filterRight/mapRight and filterLeft/mapLeft), not with .filter(isRight).map(unwrapRight)",
+        "Converts the nullable phone with toOption() or Option.from() instead of null checks"
+      ]
+    }
+  ]
+}

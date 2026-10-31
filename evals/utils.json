@@ -1,0 +1,66 @@
+{
+  "skill": "utils",
+  "scenarios": [
+    {
+      "id": "lookup-key-and-channel-unions",
+      "critical": true,
+      "prompt": "Write TypeScript: a user lookup endpoint accepts either a numeric user ID or a username; both are equally valid and neither is an error. Model the lookup key as a single value built from the raw query string, then resolve it with byId: Map<number, User> for IDs and fetchByUsername(name): Promise<User | null> for usernames. Separately, a notification is sent through exactly one of three channels (EmailPayload, SmsPayload, PushPayload): model it as one value and render a preview string for each channel.",
+      "criteria": [
+        "Models the lookup key as Union<number, string> built with Union.fromT1()/Union.fromT2(), not as Either or a hand-written tagged union",
+        "Resolves the key with the Union's .match() or .matchAsync() (one handler per case) instead of typeof checks",
+        "Models the channel as Union3<EmailPayload, SmsPayload, PushPayload> (built with fromT1/fromT2/fromT3) and renders it with a three-handler .match()"
+      ]
+    },
+    {
+      "id": "import-report-list-helpers",
+      "critical": false,
+      "prompt": "Write TypeScript: a CSV import produced rows: Either<RowError, Customer>[], where RowError has line and reason. Build a report with: the emails of the imported customers that are active, the line numbers of the failed rows, and the total outstanding balance of the imported customers. Balances come from billing.getBalance(customerId): Promise<number>, which is rate-limited, so call it one customer at a time, in order.",
+      "criteria": [
+        "Extracts the imported customers with filterRight() (optionally with its predicate) and/or mapRight(), instead of .filter(r => r.isRight()).map(r => r.unwrapRight())",
+        "Collects the failed rows with filterLeft() or the standalone mapLeft(rows, fn) list helper",
+        "Sums the balances sequentially with foldAsync(items, 0, async (sum, c) => ...) instead of a for loop or reduce over promises"
+      ]
+    },
+    {
+      "id": "env-config-conversion",
+      "critical": false,
+      "prompt": "Write TypeScript: load configuration from process.env (values are string | undefined, and an empty string counts as missing). PORT is optional and must be parsed to a number. FEATURE_A, FEATURE_B and FEATURE_C are optional flag names: return the list of the ones that are set, upper-cased. DATABASE_URL is required: when it is missing, return a typed ConfigError { code: 'MISSING_ENV'; name: string } instead of throwing.",
+      "criteria": [
+        "Converts the optional env values into Options with toOption() (using its noneWhen and/or map arguments for empty strings and parsing), not with if checks",
+        "Converts the required DATABASE_URL with toEither(value, error) (or its map/leftWhen/left form) into an Either with the ConfigError",
+        "Collects the set flags with filterSome() and/or mapSome() over an Option list, instead of .filter(o => o.isSome()).map(o => o.unwrap())"
+      ]
+    },
+    {
+      "id": "checkout-checks-noisy",
+      "critical": false,
+      "prompt": "Express + Prisma + Redis checkout. Load the customer with prisma.customer.findUnique(...), which resolves to Customer | null; a missing customer is a CheckError { code: 'NO_CUSTOMER' }. Then run three checks against the loaded customer in parallel: creditCheck(c), fraudCheck(c) and addressCheck(c), each returning Promise<Either<CheckError, CheckResult>> where CheckResult has a score. If any check fails, return its error; otherwise return the list of scores.",
+      "criteria": [
+        "Turns the nullable async customer lookup into an Either with toEitherAsync(promise, error) (or toOptionAsync(...).toEither(error))",
+        "Runs the three checks in parallel against the customer with bindAllAsync(customerEither, [creditCheck, fraudCheck, addressCheck])",
+        "Combines the check results and extracts the scores in one step with traverseEither(results, r => r.score), using its mapper argument"
+      ]
+    },
+    {
+      "id": "audit-log-paging",
+      "critical": false,
+      "prompt": "Write TypeScript: fetch every page of an audit-log API with fetchPage(cursor?: string): Promise<{ items: AuditEvent[]; nextCursor?: string }>, starting without a cursor and stopping when there is no next cursor, accumulating all events. Log the size of each page as it arrives, and call alerts.raise(page) only for pages with more than 100 failed-login events. Finally label the export 'large' when there are more than 10000 events and 'small' otherwise. Write it in an expression style, without while loops or if/else statements.",
+      "criteria": [
+        "Uses repeatWhileAsync(init, when, step) (or repeatWhile) to fetch pages until there is no next cursor, instead of a while/for loop or recursion",
+        "Logs each page with tee() or teeAsync() while passing it through",
+        "Raises the alert with teeWhen() or teeWhenAsync() guarded by the failed-login predicate",
+        "Chooses the 'large'/'small' label with which(...) instead of if/else or a ternary"
+      ]
+    },
+    {
+      "id": "resource-cleanup-and-partial-application",
+      "critical": false,
+      "prompt": "Write TypeScript: import a batch of rows into the database. db.connect() returns a Connection and conn.beginTransaction() returns a Transaction; both have a dispose() method and must always be disposed (transaction first, then connection), even if a query throws. A generic logger log(level: Level, message: string) exists: derive a warn(message) function from it without writing a new wrapper function by hand. After the import, store a summary with cache.save(summary): Promise<boolean>; importBatch must return Promise<Unit> since callers ignore the value.",
+      "criteria": [
+        "Uses usingAsync() (the two-resource form usingAsync(conn, c => c.beginTransaction(), (c, tx) => ...) or nested usingAsync/using calls) to guarantee disposal, instead of try/finally",
+        "Derives warn with apply(log, 'warn') (or the equivalent level value)",
+        "Turns the cache.save promise into Promise<Unit> with toUnitAsync()"
+      ]
+    }
+  ]
+}

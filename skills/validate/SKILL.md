@@ -9,6 +9,7 @@ Unlike `Either`, does **not** short-circuit — accumulates **all** errors acros
 
 ```typescript
 import { Validate } from '@ngwes/mini-fp';
+// prelude: import { valid, invalid } from '@ngwes/mini-fp' — same as Validate.valid / Validate.invalid
 ```
 
 ### Constructors
@@ -34,6 +35,17 @@ v.map(x => x * 2)        // Validate<L, U> — transforms valid value
 v.bind(x => validate(x)) // Validate<L, U> — chains validation (short-circuits like Either)
 ```
 
+### Errors and pattern match
+
+```typescript
+v.mapInvalid(e => e.length)                 // Validate<U, R> — transforms EACH error; valid untouched
+v.bindInvalid(errors => Validate.valid(0))  // whole L[] → new Validate (recover or replace)
+
+v.match(n => `got ${n}`, errors => errors.join(', '))     // U
+v.match('ok', 'ko')                                       // plain values allowed for either branch
+await v.matchAsync(async n => n * 2, Promise.resolve(0))  // Promise<U>; fn, async fn or PromiseLike
+```
+
 ### Combine (key feature — accumulates errors)
 
 ```typescript
@@ -50,6 +62,25 @@ Validate.invalid(['required'])
 
 // Async combine
 await v.combineAsync(Promise.resolve(Validate.invalid(['async error'])))
+```
+
+`combine(other: Validate<L, R>)` needs the **same** value type `R` on both sides: a `Validate<string, string>` does not combine with a `Validate<string, number>`.
+
+### Recipe: one object from validators of different value types
+
+Only for mixed value types: when every field has the same value type, use `.combine()` or `sequenceValidate` directly.
+
+Widen the field validators to a common value type, run them through `sequenceValidate` to collect every error, then `.map` to build the object. `unwrap()` is safe inside `map`, which only runs when every field is valid.
+
+```typescript
+type Signup = { name: string; age: number };
+
+const name = validateName(input.name);  // Validate<string, string>
+const age = validateAge(input.age);     // Validate<string, number>
+
+const signup: Validate<string, Signup> = sequenceValidate<string, unknown>([name, age])
+  .map(() => ({ name: name.unwrap(), age: age.unwrap() }));
+// both invalid → invalid([...nameErrors, ...ageErrors])
 ```
 
 ---
@@ -93,4 +124,5 @@ const result = await sequenceValidateAsync(
 - `Validate.valid(null)` → throws. Never pass null.
 - `combine` keeps the **first** value when both are valid — the second is discarded.
 - `bind` short-circuits (like `Either`). Use `combine`/`sequenceValidate` to accumulate errors.
+- `mapInvalid` maps **each** error (`L → U`); `bindInvalid` receives the **whole** `L[]`.
 - `sequenceValidateAsync` takes `Promise<Validate<L, R>[]>` (a promise of an array), not `Promise<Validate<L, R>>[]`.

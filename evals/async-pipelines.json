@@ -6,9 +6,9 @@
       "critical": true,
       "prompt": "Write TypeScript: validate a bearer token (async, may return null user ID), then load user preferences from DB (async, may not exist), then load their recommended items (async, may not exist). Short-circuit at the first absent value. No nested callbacks or intermediate awaits between chain steps.",
       "criteria": [
-        "Uses .bindAsync() to chain async optional steps on Option",
-        "Does not use intermediate await between chain steps (stays in the chain)",
-        "Returns OptionAsync or Promise<Option<T>>, not nested nulls"
+        "Uses .bindAsync() to chain the async optional steps on Option (the chain may start from Option.from() or Option.fromAsync())",
+        "Does not await or call .then() between chain steps: each step is chained directly on the async Option (an await inside a step's callback is fine)",
+        "Returns OptionAsync, Promise<Option<T>>, or a Promise of a plain value produced by .match()/.orElse() at the end of the chain, not nested nulls"
       ]
     },
     {
@@ -17,8 +17,8 @@
       "prompt": "Write TypeScript: authenticate an API token (async, returns Either<ApiError, UserId>), fetch the user (async, returns Either<ApiError, User>), check admin role (sync). Return typed errors at each step. Show consumption with match at the end.",
       "criteria": [
         "Uses .bindAsync() to chain async Either steps",
-        "Mixes sync .bind() and async .bindAsync() in the same chain",
-        "Uses .match() at consumption point to handle both success and error cases"
+        "Runs the sync admin check with .bind() directly on the async Either chain, in the same chain as the .bindAsync() steps (not wrapped in .bindAsync()/Promise.resolve and not after an intermediate await)",
+        "Uses .match() at consumption point to handle both success and error cases (awaiting chain.match(...) on the async chain, or .match() on the awaited Either)"
       ]
     },
     {
@@ -29,6 +29,26 @@
         "Uses sync .bind() for sync steps and .bindAsync() for async steps in the same chain",
         "Does not await between chain steps — stays fluent",
         "Error type propagates consistently through the entire chain"
+      ]
+    },
+    {
+      "id": "filter-on-async-option",
+      "critical": false,
+      "prompt": "Write TypeScript: load a user's subscription with db.subscriptions.find(userId): Promise<Subscription | null>, ignore it if it has expired (subscription.expiresAt < new Date()), then load its plan with db.plans.find(subscription.planId): Promise<Plan | null>. Return the plan name, or 'free' when any step yields nothing. Keep it as one chain with no awaits between steps.",
+      "criteria": [
+        "Uses .filter() directly on the async Option chain to drop an expired subscription (not an if inside a bindAsync callback or a separate await)",
+        "Chains the plan lookup with .bindAsync() on the same chain, without awaiting or calling .then() between steps",
+        "Ends the chain with .orElse('free'), .orElseAsync() or .match() to produce the plan name"
+      ]
+    },
+    {
+      "id": "upstream-call-into-either",
+      "critical": false,
+      "prompt": "Write TypeScript: call billingApi.getInvoice(id): Promise<Invoice>, which may reject with network or HTTP errors. Turn any failure into an ApiError { code: 'UPSTREAM'; message: string }, then reject unpaid invoices with { code: 'UNPAID' } (sync check), log a warning with the error code whenever the pipeline fails, and return EitherAsync<ApiError, Invoice>. No try/catch and no awaits between steps.",
+      "criteria": [
+        "Wraps the call with TryAsync.runAsync() (or Try.runAsync()) and joins the Either pipeline with .toEither()",
+        "Maps the caught error to the ApiError with .mapLeft() and runs the unpaid check with .bind(), both directly on the async Either chain",
+        "Logs failures with .onLeft() on the async Either chain instead of awaiting and checking isLeft()"
       ]
     }
   ]
