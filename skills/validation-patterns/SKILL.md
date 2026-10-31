@@ -77,6 +77,33 @@ const validateDto = (dto: CreateUserDto): Validate<string, CreateUserDto> =>
 
 ---
 
+## Recipe: Turn the result into a response
+
+```typescript
+type HttpResponse = { status: number; body: unknown };
+
+const toResponse = (dto: CreateUserDto): HttpResponse =>
+  validateDto(dto)
+    .mapInvalid(message => ({ code: 'INVALID', message }))   // reshapes EACH error
+    .match<HttpResponse>(
+      user   => ({ status: 201, body: user }),
+      errors => ({ status: 400, body: { errors } }),         // all accumulated errors
+    );
+
+// matchAsync: either handler may be async
+await validateDto(dto).matchAsync<HttpResponse>(
+  async user => { await db.save(user); return { status: 201, body: user }; },
+  errors     => ({ status: 400, body: { errors } }),
+);
+
+// bindInvalid receives the whole L[]: replace it, or recover with Validate.valid(...)
+validateName('').combine(validateEmail('x'))
+  .bindInvalid(errors => Validate.invalid([`invalid fields: ${errors.map(e => e.field).join(', ')}`]));
+// invalid(['invalid fields: name, email'])
+```
+
+---
+
 ## Recipe: Batch validation with sequenceValidate
 
 ```typescript

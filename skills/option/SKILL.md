@@ -61,8 +61,13 @@ opt.bindNoneAsync(() => Option.fromAsync(db.load(key))) // OptionAsync<T> (also 
 // Guard<T, U> = [when, then]: the first guard whose `when` holds wins, else the first argument
 opt.guardMap(x => 'small', [x => x > 3, () => 'large'], [x => x > 1, () => 'medium'])
 opt.guardBind(x => Option.some('ok'), [x => x < 0, () => Option.none<string>()])
-// guardMapAsync / guardBindAsync take async functions and return OptionAsync
+
+// guardMapAsync / guardBindAsync → OptionAsync
+await opt.guardMapAsync(id => fetchName(id), [id => id === 0, async () => 'root'])
+await opt.guardBindAsync(id => Option.fromAsync(db.find(id)), [id => id < 0, async () => Option.none<User>()])
 ```
+
+In the async variants each `when` stays synchronous and must return a `boolean`. `otherwise` and every `then` must return a `PromiseLike`, so write `async () => 'root'` even for a constant.
 
 ### Pattern match, fallback, convert
 

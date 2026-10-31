@@ -81,6 +81,26 @@ const user = await TryAsync.runAsync(() => api.getUser(id))
 
 ---
 
+## Recipe: Lazy TryAsync chain with bind, do and memo
+
+```typescript
+import { TryAsync } from '@ngwes/mini-fp';
+
+const loadUser = TryAsync.runAsync(() => fetchSession())      // nothing runs yet
+  .bind(s => TryAsync.runAsync(() => fetchUser(s.userId)))   // chain another TryAsync
+  .do(u => audit.log('login', u.id));                        // side effect, awaited; skipped on failure
+
+const name = await loadUser.match(u => u.name, 'anonymous'); // runs the chain now
+
+const config = TryAsync.runAsync(() => fetchConfig()).memo();
+await config.onFail(defaults);   // calls fetchConfig
+await config.onFail(defaults);   // reuses the first success; after a failure, calls it again
+```
+
+Each consumption (`await`, `match`, `onFail`, `toEither`) re-runs a lazy `TryAsync`. Call `memo()` when you consume it more than once and the work is expensive or has side effects. It caches successes only, so a failure is retried on the next consumption. A `throw` or rejection inside `do` is a failure. `bind` results are already memoized, but `do` is not, so its action runs on every consumption.
+
+---
+
 ## Recipe: EitherAsync as direct entry point
 
 ```typescript

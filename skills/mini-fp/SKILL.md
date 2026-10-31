@@ -26,6 +26,36 @@ npm i @ngwes/mini-fp
 | Nullable value → `Option`/`Either` | `toOption` / `toEither` (+ `Async`) |
 | Side effect, branch, loop or cleanup as an expression | `tee`, `which`, `repeatWhile`, `using`, `apply` |
 
+## Helpers
+
+Standalone functions. See the `utils` skill for examples.
+
+```typescript
+toOption(value, noneWhen?)            // Option<A>; also (value, map, noneWhen) → Option<M>
+toOptionAsync(promise, noneWhen?)     // OptionAsync<A>; also (promise, map, noneWhen)
+toEither(value, left)                 // Either<L, R>; left is a value or () => L; also (value, map, leftWhen, left)
+toEitherAsync(promise, left)          // EitherAsync<L, R>; also (promise, map, leftWhen, left)
+tee(value, action)                    // T: runs action, returns value
+teeWhen(value, action, when)          // T: runs action only when `when` holds
+teeAsync(promise, action)             // Promise<T>: awaits the value, then the action
+teeWhenAsync(promise, action, when)   // Promise<T>
+which(condition, onTrue, onFalse)     // T: if/else expression; also (value, condition, onTrue, onFalse)
+repeatWhile(init, when, step)         // T: loop as an expression
+repeatWhileAsync(init, when, step)    // Promise<T>: init and step may be async
+using(resource, fn)                   // T: calls resource.dispose() after fn
+usingAsync(resource, fn)              // Promise<T>; also (first, createSecond, fn), disposes both
+apply(fn, first)                      // (...rest) => R: fixes the first argument
+filterSome(options, predicate?)       // T[]: values of the some
+filterRight(eithers, predicate?)      // R[]: right values
+filterLeft(eithers, predicate?)       // L[]: left values
+mapSome(options, fn)                  // U[]: maps the some values
+mapRight(eithers, fn)                 // U[]: maps the right values
+mapLeft(eithers, fn)                  // U[]: maps the left values (list helper, not Either.mapLeft)
+foldAsync(items, state, folder)       // Promise<S>: async reduce, in order
+asTask(value) / asPromise(value)      // Promise<T>
+toUnitAsync(promise)                  // Promise<Unit>: awaits, discards the value
+```
+
 ## Available Skills
 
 | Skill | When to invoke |

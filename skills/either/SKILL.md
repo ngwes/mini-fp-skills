@@ -54,8 +54,14 @@ e.guardMap(x => 'small', [x => x > 3, () => 'large'])           // left is kept,
 e.guardBind(x => Either.right('ok'), [x => x > 3, () => Either.left('too large')])
 // onLeft overload: handle the left too, both sides move to a new Either<A, B>
 e.guardBind(err => Either.right(`recovered: ${err}`), x => Either.right(String(x)))
-// guardMapAsync / guardBindAsync take async functions → EitherAsync (only guardBindAsync has the onLeft overload)
+
+// guardMapAsync / guardBindAsync → EitherAsync
+await e.guardMapAsync(x => fetchPrice(x), [x => x === 0, async () => 0])
+await e.guardBindAsync(x => saveItem(x), [x => x > 3, async () => Either.left('too large')])
+await e.guardBindAsync(async err => Either.right(`recovered: ${err}`), x => saveItem(x))  // onLeft overload
 ```
+
+In the async variants each `when` stays synchronous and must return a `boolean`. `otherwise`, every `then` and `onLeft` must return a `PromiseLike`. Only `guardBindAsync` has the `onLeft` overload, not `guardMapAsync`.
 
 ### Pattern match
 

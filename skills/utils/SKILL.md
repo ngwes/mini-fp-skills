@@ -106,3 +106,5 @@ filterLeft(results)                 // left values; filterRight for right values
 mapRight(results, x => x * 10)      // map the right values; mapSome / mapLeft likewise
 await foldAsync(ids, 0, async (sum, id) => sum + (await fetchOrder(id)).total)  // in order
 ```
+
+`mapLeft(results, fn)` takes an array of `Either` and returns `U[]` holding only the mapped left values. The `e.mapLeft(fn)` method maps one `Either` and returns an `Either`. The method needs no import, so importing the list helper never shadows it and no alias is needed.
