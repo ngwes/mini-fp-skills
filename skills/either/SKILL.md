@@ -101,9 +101,10 @@ const result = await Either.right<ApiError, string>('user-1')
 
 // bindLeftAsync — chain on left (error recovery)
 await Either.left<string, number>('not_found')
-  .bindLeftAsync(code => fallbackLookup(code))
+  .bindLeftAsync(code => fallbackLookup(code));
 
-.bindAsync(existingPromise)  // also accepts a PromiseLike<Either<L, U>> directly
+// bindAsync also accepts a PromiseLike<Either<L, U>> directly
+await Either.right<ApiError, string>('user-1').bindAsync(existingPromise);
 ```
 
 On an `EitherAsync`, `match` and `matchAsync` return a `Promise` of the plain value.
