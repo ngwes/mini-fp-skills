@@ -47,7 +47,8 @@
       "prompt": "Write TypeScript: fetch every page of an audit-log API with fetchPage(cursor?: string): Promise<{ items: AuditEvent[]; nextCursor?: string }>, starting without a cursor and stopping when there is no next cursor, accumulating all events. Log the size of each page as it arrives, and call alerts.raise(page) only for pages with more than 100 failed-login events. Finally label the export 'large' when there are more than 10000 events and 'small' otherwise. Write it in an expression style, without while loops or if/else statements.",
       "criteria": [
         "Uses repeatWhileAsync(init, when, step) (or repeatWhile) to fetch pages until there is no next cursor, instead of a while/for loop or recursion",
-        "Logs each page with tee() or teeAsync() while passing it through, and raises the alert with teeWhen() or teeWhenAsync() guarded by the failed-login predicate",
+        "Logs each page with tee() or teeAsync() while passing it through",
+        "Raises the alert with teeWhen() or teeWhenAsync() guarded by the failed-login predicate",
         "Chooses the 'large'/'small' label with which(...) instead of if/else or a ternary"
       ]
     },

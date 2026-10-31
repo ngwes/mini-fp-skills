@@ -8,7 +8,7 @@
       "criteria": [
         "Uses Validate (not Either) so all field errors are collected",
         "Uses .combine() across all field validators to accumulate errors",
-        "A test case with all three fields invalid produces three errors, not one"
+        "Combining three invalid fields returns errors from all three fields, not just the first"
       ]
     },
     {

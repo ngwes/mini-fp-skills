@@ -18,7 +18,7 @@
       "criteria": [
         "Uses .map() to transform the right (success) value, on an Either or directly on an async Either chain",
         "Uses .mapLeft() to transform the left (error) value, on an Either or directly on an async Either chain",
-        "Both branches are handled without pattern matching only at the end"
+        "Transforms both sides with .map()/.mapLeft() on the Either chain, not inside the handlers of a final .match()"
       ]
     },
     {

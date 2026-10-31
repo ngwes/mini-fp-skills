@@ -28,7 +28,7 @@
       "criteria": [
         "Uses Try or TryAsync to capture the thrown error",
         "No bare try/catch block present",
-        "Handles the error with .match(), .onFail()/.onFailAsync(), .toEither(), or .isSuccess()/.isFailure() on the awaited Try, without consuming an un-memoized TryAsync more than once (each consumption re-runs the query)"
+        "Handles the error with .match(), .onFail()/.onFailAsync(), .toEither(), or .isSuccess()/.isFailure() on the awaited Try, without consuming an un-memoized TryAsync more than once (each consumption re-runs the query) (several calls on the awaited Try are fine)"
       ]
     },
     {
