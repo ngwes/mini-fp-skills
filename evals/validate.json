@@ -7,7 +7,7 @@
       "prompt": "Write TypeScript validators for a signup form: name (required, non-empty), email (must contain @), age (must be >= 18). Run ALL validators and return ALL errors at once, not just the first one.",
       "criteria": [
         "Uses Validate (not Either) so errors accumulate instead of short-circuiting",
-        "Uses .combine() to merge results from multiple validators",
+        "Merges the results of the validators with .combine() or sequenceValidate",
         "Returns all errors, not just the first one that fails"
       ]
     },
@@ -56,7 +56,7 @@
       "critical": false,
       "prompt": "Express + Prisma signup route. Validate email and password synchronously, and check that the email is not already taken with an async isEmailTaken(email): Promise<boolean>; report all problems together. When everything is valid, save the user with prisma.user.create(...) and respond 201 with the user; otherwise respond 422 with the list of errors.",
       "criteria": [
-        "Merges the async uniqueness check with .combineAsync() (or sequenceValidateAsync) so its error is accumulated with the sync errors",
+        "Accumulates the async uniqueness error with the sync errors, via .combineAsync()/sequenceValidateAsync or by awaiting the check and merging its Validate with .combine()/sequenceValidate",
         "Uses .matchAsync() with an async valid handler that saves the user, and an invalid handler that builds the 422 response",
         "Does not branch on isValid()/isInvalid() or call unwrap()/unwrapInvalid() to build the responses"
       ]
