@@ -30,6 +30,26 @@
         "Uses .bindLeftAsync() or .bindLeft() to implement the fallback on Left",
         "Chain stops when the first Right is found (does not always go to DB)"
       ]
+    },
+    {
+      "id": "nullable-lookups-to-typed-errors",
+      "critical": true,
+      "prompt": "Write TypeScript: an order-cancellation flow uses a repository whose methods return T | null: findOrder(id), findCustomer(order.customerId) and findPaymentFor(order.id). Each missing record must become a typed AppError { code: 'ORDER_NOT_FOUND' | 'CUSTOMER_NOT_FOUND' | 'PAYMENT_NOT_FOUND'; message: string }, and the flow stops at the first missing record. Do not use exceptions or null checks.",
+      "criteria": [
+        "Converts each nullable result into an Either with toEither(value, error) or Option.from(value).toEither(error) (value or factory), instead of if/null checks",
+        "Uses a typed error with a code field for each missing record",
+        "Chains the lookups with .bind() (or .bindAsync()) so later lookups do not run after the first Left"
+      ]
+    },
+    {
+      "id": "void-write-to-either",
+      "critical": false,
+      "prompt": "Write TypeScript: save a report to disk with fs.writeFileSync(path, contents), which returns nothing and throws on permission or disk errors. Expose saveReport(path, contents) that returns an Either whose error side is AppError { code: 'WRITE_FAILED'; message: string } and whose success side carries no data, so it can be chained with other Either steps. Do not use try/catch.",
+      "criteria": [
+        "Wraps the write with Try.run()",
+        "Maps the void result to Unit.default with Try's .map() before calling .toEither() (toEither throws on an undefined value)",
+        "Maps the error to the WRITE_FAILED AppError with .mapLeft() (or builds it in a single .match()), with no try/catch block"
+      ]
     }
   ]
 }

@@ -30,6 +30,36 @@
         "No bare try/catch block present",
         "Handles the error with .match(), .onFail()/.onFailAsync(), .toEither(), or .isSuccess()/.isFailure() on the awaited Try, without consuming an un-memoized TryAsync more than once (each consumption re-runs the query)"
       ]
+    },
+    {
+      "id": "config-read-once",
+      "critical": true,
+      "prompt": "Write TypeScript: read config.json from disk with fs.readFileSync, parse it with JSON.parse and extract its port number (throw if port is not a number). Any of these steps may throw. During startup the result is used several times (to check whether it loaded, to log it, then to start the server), but a successful read must happen only once. Fall back to port 3000 on failure. Do not use try/catch.",
+      "criteria": [
+        "Chains the read, the parse and/or the port extraction as separate steps with Try's .map() and/or .bind() (e.g. .bind(raw => Try.run(() => JSON.parse(raw)))) instead of one big closure",
+        "Prevents re-reading the file on repeated use: calls .memo() on the Try that is consumed several times (a Try returned by .map()/.bind() also counts, since those results are memoized)",
+        "Falls back to 3000 with .onFail(3000), .onFail(() => 3000) or .match(..., 3000), with no try/catch block"
+      ]
+    },
+    {
+      "id": "sdk-session-user-chain",
+      "critical": true,
+      "prompt": "Write TypeScript: a vendor SDK exposes getSession(token): Promise<Session> and getUser(userId): Promise<User>; both may throw or reject. Load the session, then load the user from session.userId, write an audit entry with audit.record(user.id) once the user is loaded, and return an async result typed as either an error message string or the User. Do not use try/catch.",
+      "criteria": [
+        "Wraps the SDK calls with TryAsync.runAsync() (or Try.runAsync()) and chains the user load onto the session load with the TryAsync .bind() method",
+        "Writes the audit entry with TryAsync's .do() (or with .onRight() after converting to Either), so it is skipped on failure and not placed inside the runAsync callback",
+        "Converts the result with .toEither() on the TryAsync and maps the error to a message string with .mapLeft(), with no try/catch block"
+      ]
+    },
+    {
+      "id": "shared-remote-flags-noisy",
+      "critical": false,
+      "prompt": "Express + node-fetch app with Winston logging. Feature flags are fetched from a remote URL (fetch(url).then(r => r.json()), which may reject or throw). Several middlewares need the flags on every request. Fetch them once and share the result between all middlewares and concurrent requests; if the fetch fails, log the error, use DEFAULT_FLAGS for that request and try fetching again on the next request. Do not use try/catch.",
+      "criteria": [
+        "Creates the flags loader with TryAsync.runAsync(...) (or Try.runAsync) followed by .memo(), stored once and reused by the middlewares",
+        "Does not hand-roll the caching or the retry (no separate cached-flags variable, promise cache or retry flag besides the memoized TryAsync)",
+        "Falls back to DEFAULT_FLAGS and logs the error with .onFail(), .onFailAsync() or .match() on the memoized TryAsync, with no try/catch block"
+      ]
     }
   ]
 }

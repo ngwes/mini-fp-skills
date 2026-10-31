@@ -30,6 +30,36 @@
         "Short-circuits: downstream steps do not run after the first Left",
         "Uses .match() at the end to map error codes to HTTP status codes"
       ]
+    },
+    {
+      "id": "log-success-and-failure",
+      "critical": false,
+      "prompt": "Write TypeScript: parse a payment amount from a query-string value into Either<PaymentError, number>, where PaymentError is { code: 'NOT_A_NUMBER' | 'NOT_POSITIVE' | 'TOO_MANY_DECIMALS'; raw: string }. Then convert the amount to integer cents. Log logger.info with the parsed amount when parsing succeeds and logger.warn with the error code when it fails, while still returning the Either<PaymentError, number> in cents to the caller.",
+      "criteria": [
+        "Uses .onRight() to log the parsed amount inside the chain",
+        "Uses .onLeft() to log the error inside the chain",
+        "Returns the Either (converted to cents with .map()) without consuming it with match/unwrap and without an if around the result for the logging"
+      ]
+    },
+    {
+      "id": "shipping-rules-guards",
+      "critical": false,
+      "prompt": "Write TypeScript: a validator returns Either<OrderError, Order>, where Order has weightKg and destinationCountry. Orders shipped to an embargoed country (a Set<string>) must become an EMBARGOED OrderError; other orders continue. Then choose the shipping method from the weight: over 50 kg is 'freight', over 5 kg is 'parcel', anything else is 'letter'. An invalid order from the validator must keep its original error. Avoid if/else ladders and nested ternaries.",
+      "criteria": [
+        "Uses .guardBind() (or .guardBindAsync()) with a [when, then] guard to turn embargoed orders into a Left while other orders stay Right",
+        "Uses .guardMap() (or .guardMapAsync()) with [when, then] guards to pick the shipping method from the weight, instead of if/else or nested ternaries",
+        "Does not check isLeft()/isRight() manually: the validator's Left passes through the guard steps unchanged"
+      ]
+    },
+    {
+      "id": "refund-routing-async-noisy",
+      "critical": false,
+      "prompt": "Express + Stripe + PostgreSQL. A refund request has already been validated into Either<RefundError, Refund>. Route it to the right processor: refunds over 1000 EUR go to manualReview.submit(refund), card payments go to stripeRefunds.create(refund), everything else goes to walletRefunds.credit(refund). Each processor returns Promise<Either<RefundError, Receipt>>. Log the receipt ID on success, then send the HTTP response (201 with the receipt, or a status that depends on the error code).",
+      "criteria": [
+        "Uses .guardBindAsync() with [when, then] guard pairs to route the refund to the async processor, instead of if/else or a switch",
+        "Logs the receipt with .onRight() on the async Either chain (not after awaiting it in a separate if)",
+        "Consumes the result once with .match() or .matchAsync() to send both the success and the error responses"
+      ]
     }
   ]
 }
