@@ -30,6 +30,36 @@
         "Does not short-circuit: all items are validated even after the first failure",
         "Returns errors from all failing items, not just the first"
       ]
+    },
+    {
+      "id": "field-errors-to-http-response",
+      "critical": true,
+      "prompt": "Write TypeScript: existing validators return Validate<string, T> with messages formatted as 'field: reason' (e.g. 'email: must contain @'). For a CreateAccount request (email, password, age), run all the validators and accumulate every error. The HTTP layer needs FieldError objects { field, message } instead of strings. Return { status: 201, body: account } when valid, or { status: 422, body: FieldError[] } listing every error.",
+      "criteria": [
+        "Converts each string error into a FieldError with .mapInvalid() on the Validate, instead of unwrapInvalid().map(...) inside an isInvalid() branch",
+        "Builds both responses with a single .match() on the combined Validate (no isValid()/unwrap() branching)",
+        "Accumulates the errors of all fields with .combine() or sequenceValidate"
+      ]
+    },
+    {
+      "id": "recover-optional-field",
+      "critical": false,
+      "prompt": "Write TypeScript: a profile form has username (required, 3-20 chars) and displayName (optional). validateDisplayName(s) returns Validate<string, string> and fails with 'displayName: empty' for an empty value or with other messages such as 'displayName: too long'. When the only problem is that displayName is empty, use the username as the display name instead of failing; any other displayName errors must still be reported. All errors of all fields must be returned together.",
+      "criteria": [
+        "Uses .bindInvalid() on the displayName Validate to inspect the whole error list and recover with a valid value when the only error is 'empty'",
+        "Keeps the other displayName errors invalid (returns the errors from bindInvalid, or does not recover) instead of dropping them",
+        "Combines the username and displayName results with .combine() (or sequenceValidate) so errors from both fields are reported together"
+      ]
+    },
+    {
+      "id": "async-save-on-valid-noisy",
+      "critical": false,
+      "prompt": "Express + Prisma signup route. Validate email and password synchronously, and check that the email is not already taken with an async isEmailTaken(email): Promise<boolean>; report all problems together. When everything is valid, save the user with prisma.user.create(...) and respond 201 with the user; otherwise respond 422 with the list of errors.",
+      "criteria": [
+        "Merges the async uniqueness check with .combineAsync() (or sequenceValidateAsync) so its error is accumulated with the sync errors",
+        "Uses .matchAsync() with an async valid handler that saves the user, and an invalid handler that builds the 422 response",
+        "Does not branch on isValid()/isInvalid() or call unwrap()/unwrapInvalid() to build the responses"
+      ]
     }
   ]
 }
