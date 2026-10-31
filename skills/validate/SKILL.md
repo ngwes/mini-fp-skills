@@ -64,6 +64,23 @@ Validate.invalid(['required'])
 await v.combineAsync(Promise.resolve(Validate.invalid(['async error'])))
 ```
 
+`combine(other: Validate<L, R>)` needs the **same** value type `R` on both sides: a `Validate<string, string>` does not combine with a `Validate<string, number>`.
+
+### Recipe: one object from validators of different value types
+
+Widen the field validators to a common value type, run them through `sequenceValidate` to collect every error, then `.map` to build the object. `unwrap()` is safe inside `map`, which only runs when every field is valid.
+
+```typescript
+type Signup = { name: string; age: number };
+
+const name = validateName(input.name);  // Validate<string, string>
+const age = validateAge(input.age);     // Validate<string, number>
+
+const signup: Validate<string, Signup> = sequenceValidate<string, unknown>([name, age])
+  .map(() => ({ name: name.unwrap(), age: age.unwrap() }));
+// both invalid → invalid([...nameErrors, ...ageErrors])
+```
+
 ---
 
 ## sequenceValidate

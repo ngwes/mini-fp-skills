@@ -26,6 +26,21 @@ npm i @ngwes/mini-fp
 | Nullable value → `Option`/`Either` | `toOption` / `toEither` (+ `Async`) |
 | Side effect, branch, loop or cleanup as an expression | `tee`, `which`, `repeatWhile`, `using`, `apply` |
 
+## Core constructors and combinators
+
+The real entry points; the type skills cover the rest.
+
+```typescript
+Option.from(value)                         // Option<T>: none for null/undefined; also some(x), none()
+Either.right(value) / Either.left(error)   // Either<L, R>; also plain right(…), left(…)
+Try.run(() => JSON.parse(raw))             // Try<T>, lazy. There is no Try.of
+Try.runAsync(() => fetchUser(id))          // TryAsync<T>; same as TryAsync.runAsync
+Validate.valid(v) / Validate.invalid([e])  // Validate<L, R>; also plain valid(…), invalid(…)
+a.combine(b)                               // Validate<L, R>: accumulates errors; same R on both sides
+sequenceValidate([v1, v2, v3])             // Validate<L, R[]>: accumulates errors
+option.toEither(left) / t.toEither()       // Option → Either<L, T>, Try → Either<unknown, T>
+```
+
 ## Helpers
 
 Standalone functions. See the `utils` skill for examples.

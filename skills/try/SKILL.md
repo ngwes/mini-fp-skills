@@ -83,18 +83,19 @@ await te.onFailAsync(e => asTask(Either.left<Error, number>(e as Error))).map(n 
 
 ### Await the underlying Try\<T\>
 
-`TryAsync<T>` implements `PromiseLike<Try<T>>` — `await` runs it and resolves to an evaluated `Try<T>`:
+`TryAsync<T>` implements `PromiseLike<Try<T>>` — `await` runs it once and resolves to an evaluated `Try<T>` that holds the outcome. Calling several methods on that `Try` does not re-run the work:
 
 ```typescript
-const t = await TryAsync.runAsync(() => fetchRemote());
-t.isSuccess(); // inspect manually
+const t = await TryAsync.runAsync(() => fetchRemote());  // fetchRemote runs here, once
+t.isSuccess();                                           // reads the stored outcome
+t.match(data => data, null);                             // no re-run either
 ```
 
 ---
 
 ## Gotchas
 
-- **Laziness:** without `memo()`, every consumption re-runs the function. `t.isSuccess()` then `t.onFail(x)` runs it twice — call `.memo()` for side-effecting or expensive work.
+- **Laziness:** on a lazy `Try` (from `Try.run`) or `TryAsync`, every consumption re-runs the function unless you call `memo()`. `t.isSuccess()` then `t.onFail(x)` runs it twice — call `.memo()` for side-effecting or expensive work. This does not apply to the `Try` you get from `await tryAsync`: it is already evaluated, so several calls on it are fine.
 - **`memo()` keeps successes only:** a failure is not cached, so the next consumption retries the function.
 - `toEither()` throws (rejects for `TryAsync`) when the value or the thrown error is `null`/`undefined`. For `Try<void>`, map first: `.map(() => Unit.default).toEither()`.
 - `onFailAsync` accepts any `PromiseLike<T>` — including `EitherAsync<L, T>` when `T` is `Either<L, R>`.

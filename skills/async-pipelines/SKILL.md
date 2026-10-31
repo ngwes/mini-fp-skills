@@ -97,7 +97,7 @@ await config.onFail(defaults);   // calls fetchConfig
 await config.onFail(defaults);   // reuses the first success; after a failure, calls it again
 ```
 
-Each consumption (`await`, `match`, `onFail`, `toEither`) re-runs a lazy `TryAsync`. Call `memo()` when you consume it more than once and the work is expensive or has side effects. It caches successes only, so a failure is retried on the next consumption. A `throw` or rejection inside `do` is a failure. `bind` results are already memoized, but `do` is not, so its action runs on every consumption.
+Each consumption (`await`, `match`, `onFail`, `toEither`) re-runs a lazy `TryAsync`. The `Try` that `await` resolves to is already evaluated, so calling several methods on it (`const t = await ta; t.isFailure(); t.match(…)`) does not re-run anything. Call `memo()` when you consume it more than once and the work is expensive or has side effects. It caches successes only, so a failure is retried on the next consumption. A `throw` or rejection inside `do` is a failure. `bind` results are already memoized, but `do` is not, so its action runs on every consumption.
 
 ---
 
