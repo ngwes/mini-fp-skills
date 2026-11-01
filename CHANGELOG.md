@@ -1,3 +1,10 @@
+## [1.3.1](https://github.com/ngwes/mini-fp-skills/compare/v1.3.0...v1.3.1) (2026-11-01)
+
+
+### Bug Fixes
+
+* **validate:** teach ending with match or matchAsync instead of unwrap branches ([8c963ad](https://github.com/ngwes/mini-fp-skills/commit/8c963ad54152d761fed5c59181b76833edc91839))
+
 # [1.3.0](https://github.com/ngwes/mini-fp-skills/compare/v1.2.0...v1.3.0) (2026-10-31)
 
 
