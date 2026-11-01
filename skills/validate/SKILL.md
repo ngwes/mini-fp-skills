@@ -83,6 +83,22 @@ const signup: Validate<string, Signup> = sequenceValidate<string, unknown>([name
 // both invalid → invalid([...nameErrors, ...ageErrors])
 ```
 
+### Recipe: respond from a Validate
+
+End with `match`/`matchAsync` to build the response or the final value. Do not branch on `isValid()`/`isInvalid()` or call `unwrap()`/`unwrapInvalid()` for it.
+
+```typescript
+// Book a room: the booking when every check passes, otherwise every error
+const checked = await validateDates(request.from, request.to)  // Validate<string, string>
+  .combine(validateGuests(request.guests))                    // Validate<string, string>
+  .combineAsync(checkRoomFree(request.roomId, request.from)); // Promise<Validate<string, string>>
+
+const outcome = await checked.matchAsync(
+  async () => ({ booked: true, booking: await saveBooking(request) }),
+  errors => ({ booked: false, errors }),
+);
+```
+
 ---
 
 ## sequenceValidate
@@ -124,5 +140,6 @@ const result = await sequenceValidateAsync(
 - `Validate.valid(null)` → throws. Never pass null.
 - `combine` keeps the **first** value when both are valid — the second is discarded.
 - `bind` short-circuits (like `Either`). Use `combine`/`sequenceValidate` to accumulate errors.
+- To turn a `Validate` into a response or a final value, use `match`/`matchAsync`, not `isValid()` + `unwrap()`.
 - `mapInvalid` maps **each** error (`L → U`); `bindInvalid` receives the **whole** `L[]`.
 - `sequenceValidateAsync` takes `Promise<Validate<L, R>[]>` (a promise of an array), not `Promise<Validate<L, R>>[]`.

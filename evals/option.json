@@ -36,7 +36,7 @@
       "critical": true,
       "prompt": "Write TypeScript: resolve a user's UI theme. Read it from userSettings (Map<string, string>, keyed by user ID); the stored value may be missing or may be an unsupported string, and only 'light', 'dark' and 'system' are valid. When the user has no valid theme, write a debug log line, then fall back to the organization default from orgSettings (Map<string, string>, same rules: may be missing or invalid). If that also yields nothing, use 'system'. Write it as one chain, without if statements or null checks.",
       "criteria": [
-        "Drops a theme that is not one of the supported values with .filter() on the Option or with the noneWhen predicate of Option.from(value, noneWhen) (instead of an if or a ternary)",
+        "Inside the Option chain, a theme that is not one of the supported values becomes none, so the chain falls back. Any Option-based form counts, such as .filter(), the noneWhen predicate of Option.from(value, noneWhen), a .bind() callback that returns none, or Option.from() of a lookup or find that yields undefined for an unsupported value (not an if statement or a null check around the chain)",
         "Falls back to the organization default with .bindNone() or .mapNone() on the Option chain (not with nested null checks or by unwrapping the first Option)",
         "Logs the debug line with .onNone() (or .onSome() for the found case) inside the chain, and still ends with .orElse('system') or .match() to produce the final string"
       ]
