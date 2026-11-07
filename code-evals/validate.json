@@ -1,0 +1,13 @@
+{
+  "skill": "validate",
+  "scenarios": [
+    {
+      "id": "field-errors-to-http-response",
+      "critical": true,
+      "prompt": "Write TypeScript: the existing validators validateEmail(email), validatePassword(password) and validateAge(age) return Validate<string, T> with messages formatted as 'field: reason' (e.g. 'email: must contain @'). For a CreateAccount request (email, password, age), run all the validators and accumulate every error. The HTTP layer needs FieldError objects { field, message } instead of strings. Return { status: 201, body: account } when valid, or { status: 422, body: FieldError[] } listing every error.",
+      "output": {
+        "result": "a function (validators: { validateEmail, validatePassword, validateAge }) => (request: { email, password, age }) => { status, body }"
+      }
+    }
+  ]
+}

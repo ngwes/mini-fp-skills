@@ -1,0 +1,13 @@
+{
+  "skill": "async-pipelines",
+  "scenarios": [
+    {
+      "id": "filter-on-async-option",
+      "critical": false,
+      "prompt": "Write TypeScript: load a user's subscription with db.subscriptions.find(userId): Promise<Subscription | null>, ignore it if it has expired (subscription.expiresAt < new Date()), then load its plan with db.plans.find(subscription.planId): Promise<Plan | null>. Return the plan name, or 'free' when any step yields nothing. Keep it as one chain with no awaits between steps.",
+      "output": {
+        "result": "a function (db: { subscriptions, plans }) => (userId: string) => a Promise of the plan name"
+      }
+    }
+  ]
+}
