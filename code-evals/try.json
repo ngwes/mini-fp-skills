@@ -1,0 +1,13 @@
+{
+  "skill": "try",
+  "scenarios": [
+    {
+      "id": "wrap-throwing-sync",
+      "critical": true,
+      "prompt": "Write TypeScript: parse a JSON string that may be malformed. Handle the case where JSON.parse throws. Return a default empty object if parsing fails. Do not use try/catch.",
+      "output": {
+        "result": "a function (text: string) => the parsed value, or the default"
+      }
+    }
+  ]
+}

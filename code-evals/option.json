@@ -1,0 +1,13 @@
+{
+  "skill": "option",
+  "scenarios": [
+    {
+      "id": "theme-fallback-chain",
+      "critical": true,
+      "prompt": "Write TypeScript: resolve a user's UI theme. Read it from userSettings (Map<string, string>, keyed by user ID); the stored value may be missing or may be an unsupported string, and only 'light', 'dark' and 'system' are valid. When the user has no valid theme, write a debug log line with logger.debug(message), then fall back to the organization default from orgSettings (Map<string, string>, keyed by organization ID, same rules: may be missing or invalid). If that also yields nothing, use 'system'. Write it as one chain, without if statements or null checks.",
+      "output": {
+        "result": "a function (deps: { userSettings, orgSettings, logger }) => (userId: string, orgId: string) => the theme"
+      }
+    }
+  ]
+}
