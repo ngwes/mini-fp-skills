@@ -1,0 +1,55 @@
+{
+  "skillBeVersion": "1.4.0",
+  "skills": {
+    "async-pipelines": {
+      "date": "2026-11-07",
+      "fingerprint": "d8db5264c93d98a266894d6951aaf6deedd62abc7d8c5df83d716594ff9bc0a0",
+      "ready": true,
+      "reasons": [],
+      "models": [
+        "claude-sonnet-5-5"
+      ],
+      "grader": "claude-haiku-5-5"
+    },
+    "error-handling": {
+      "date": "2026-11-07",
+      "fingerprint": "58d83be140cf1f69668a7b574b5ebedd1b6d882eefd8231bc1199c55bc301b8c",
+      "ready": true,
+      "reasons": [],
+      "models": [
+        "claude-sonnet-5-5"
+      ],
+      "grader": "claude-haiku-5-5"
+    },
+    "option": {
+      "date": "2026-11-07",
+      "fingerprint": "2e5015f1db34ef4dde5a40992cfe2345e7eca7e8648dda840cacf95684b56331",
+      "ready": true,
+      "reasons": [],
+      "models": [
+        "claude-sonnet-5-5"
+      ],
+      "grader": "claude-haiku-5-5"
+    },
+    "try": {
+      "date": "2026-11-07",
+      "fingerprint": "2343702046958f25404bd7c40d50bc74ae26d0692e46ec5843618ccd2b5473d5",
+      "ready": true,
+      "reasons": [],
+      "models": [
+        "claude-sonnet-5-5"
+      ],
+      "grader": "claude-haiku-5-5"
+    },
+    "validate": {
+      "date": "2026-11-07",
+      "fingerprint": "84f47b5ec41a87f41f13b1a76635a6d32161b389c977416d79638f912d1ff9bf",
+      "ready": true,
+      "reasons": [],
+      "models": [
+        "claude-sonnet-5-5"
+      ],
+      "grader": "claude-haiku-5-5"
+    }
+  }
+}
